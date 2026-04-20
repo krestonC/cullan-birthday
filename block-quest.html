@@ -1305,50 +1305,51 @@ function update() {
 
 // ==================== MINING ====================
 function updateMining() {
-  if (!state.mouse.down && !state.keys.break) {
-    state.breaking = null;
-    return;
-  }
-
-  let tx, ty;
+  // Determine a freshly-selected target from current input (if any)
+  let newTx = null, newTy = null;
   if (state.keys.break) {
-    // Mobile/keyboard: target block in front of player
     const p = state.player;
-    tx = Math.floor((p.x + p.width / 2) / BLOCK) + p.facing;
-    ty = Math.floor((p.y + p.height / 2) / BLOCK);
-  } else {
-    // Mouse target
+    newTx = Math.floor((p.x + p.width / 2) / BLOCK) + p.facing;
+    newTy = Math.floor((p.y + p.height / 2) / BLOCK);
+  } else if (state.mouse.down) {
     const canvas = document.getElementById('game-canvas');
     const rect = canvas.getBoundingClientRect();
     const worldX = state.mouse.x * (canvas.width / rect.width) + state.camera.x;
     const worldY = state.mouse.y * (canvas.height / rect.height) + state.camera.y;
-    tx = Math.floor(worldX / BLOCK);
-    ty = Math.floor(worldY / BLOCK);
+    newTx = Math.floor(worldX / BLOCK);
+    newTy = Math.floor(worldY / BLOCK);
   }
 
-  if (tx < 0 || tx >= WORLD_WIDTH || ty < 0 || ty >= WORLD_HEIGHT) return;
+  // If input retargets a different tile, (re)start breaking
+  if (newTx !== null && (!state.breaking || state.breaking.tx !== newTx || state.breaking.ty !== newTy)) {
+    if (newTx < 0 || newTx >= WORLD_WIDTH || newTy < 0 || newTy >= WORLD_HEIGHT) { return; }
+    const p = state.player;
+    const px = Math.floor((p.x + p.width / 2) / BLOCK);
+    const py = Math.floor((p.y + p.height / 2) / BLOCK);
+    if (Math.abs(newTx - px) + Math.abs(newTy - py) > 5) { return; }
+    const bt = state.world[newTx][newTy];
+    if (bt === 0) { return; }
+    if (!canMine(bt)) {
+      const b = BLOCK_BY_ID[bt];
+      if (b && b.requiresTool) {
+        showHintOnce('need_' + b.requiresTool, `Need a ${b.requiresTool.toUpperCase()} pickaxe!`);
+      }
+      return;
+    }
+    state.breaking = { tx: newTx, ty: newTy, progress: 0, total: miningTime(bt) };
+  }
 
-  // Range check
+  // No active break: nothing to advance
+  if (!state.breaking) return;
+
+  // Auto-advance existing break (does NOT require continued input)
+  const { tx, ty } = state.breaking;
   const p = state.player;
   const px = Math.floor((p.x + p.width / 2) / BLOCK);
   const py = Math.floor((p.y + p.height / 2) / BLOCK);
-  const dist = Math.abs(tx - px) + Math.abs(ty - py);
-  if (dist > 5) { state.breaking = null; return; }
-
+  if (Math.abs(tx - px) + Math.abs(ty - py) > 5) { state.breaking = null; return; }
   const blockType = state.world[tx][ty];
   if (blockType === 0) { state.breaking = null; return; }
-  if (!canMine(blockType)) {
-    state.breaking = null;
-    const b = BLOCK_BY_ID[blockType];
-    if (b && b.requiresTool) {
-      showHintOnce('need_' + b.requiresTool, `Need a ${b.requiresTool.toUpperCase()} pickaxe!`);
-    }
-    return;
-  }
-
-  if (!state.breaking || state.breaking.tx !== tx || state.breaking.ty !== ty) {
-    state.breaking = { tx, ty, progress: 0, total: miningTime(blockType) };
-  }
 
   state.breaking.progress++;
   if (state.breaking.progress >= state.breaking.total) {
@@ -1887,6 +1888,32 @@ canvas.addEventListener('mouseup', (e) => {
   else if (e.button === 2) state.mouse.rightDown = false;
 });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// Touch on canvas: tap-to-mine anywhere within reach (drag moves target, auto-completes)
+canvas.addEventListener('touchstart', (e) => {
+  if (e.target !== canvas) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  state.mouse.x = t.clientX - rect.left;
+  state.mouse.y = t.clientY - rect.top;
+  state.mouse.down = true;
+}, { passive: false });
+canvas.addEventListener('touchmove', (e) => {
+  if (e.target !== canvas) return;
+  e.preventDefault();
+  if (e.touches.length === 0) return;
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  state.mouse.x = t.clientX - rect.left;
+  state.mouse.y = t.clientY - rect.top;
+}, { passive: false });
+canvas.addEventListener('touchend', (e) => {
+  state.mouse.down = false;
+}, { passive: false });
+canvas.addEventListener('touchcancel', (e) => {
+  state.mouse.down = false;
+}, { passive: false });
 
 // Touch controls — D-pad + action buttons
 function bindCtrl(selector, onDown, onUp) {
