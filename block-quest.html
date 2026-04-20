@@ -463,6 +463,68 @@
     100% { opacity: 0; transform: translate(-50%, -20px); }
   }
 
+  /* ========== OBJECTIVE BANNER ========== */
+  #objective-banner {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    border: 3px solid #FFC107;
+    box-shadow: inset 0 0 0 2px #000, 4px 4px 0 rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #FFC107;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 14;
+    pointer-events: none;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    max-width: 92vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: objPulse 2s ease-in-out infinite;
+  }
+
+  #objective-banner.visible {
+    display: flex;
+  }
+
+  #objective-banner.updating {
+    animation: objFlash 0.8s ease-out;
+  }
+
+  @keyframes objPulse {
+    0%, 100% { border-color: #FFC107; box-shadow: inset 0 0 0 2px #000, 4px 4px 0 rgba(0,0,0,0.5); }
+    50% { border-color: #FFF176; box-shadow: inset 0 0 0 2px #000, 4px 4px 0 rgba(0,0,0,0.5), 0 0 16px rgba(255,193,7,0.6); }
+  }
+
+  @keyframes objFlash {
+    0% { background: rgba(76, 175, 80, 0.9); transform: translateX(-50%) scale(1.1); }
+    100% { background: rgba(0, 0, 0, 0.75); transform: translateX(-50%) scale(1); }
+  }
+
+  #objective-banner .obj-star {
+    color: #FFF176;
+    animation: starSpin 3s linear infinite;
+  }
+
+  @keyframes starSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 420px) {
+    #objective-banner {
+      font-size: 8px;
+      padding: 6px 10px;
+      top: 42px;
+    }
+  }
+
   /* ========== RESPONSIVE ========== */
   @media (max-width: 420px) {
     #hotbar { bottom: 110px; gap: 3px; padding: 4px; }
@@ -513,6 +575,13 @@
 
 <!-- PAUSE BUTTON -->
 <div id="pause-btn">⏸</div>
+
+<!-- OBJECTIVE BANNER -->
+<div id="objective-banner">
+  <span class="obj-star">✦</span>
+  <span id="objective-text">PUNCH TREES 🌳 TO GET WOOD</span>
+  <span class="obj-star">✦</span>
+</div>
 
 <!-- HOTBAR -->
 <div id="hotbar"></div>
@@ -871,6 +940,73 @@ const state = {
   hints: [],
 };
 
+// ==================== OBJECTIVE SYSTEM ====================
+const OBJECTIVES = [
+  {
+    id: 'get_wood',
+    text: 'PUNCH TREES 🌳 TO GET WOOD',
+    check: () => hasInv(BLOCKS.WOOD.id, 1),
+  },
+  {
+    id: 'make_planks',
+    text: 'OPEN CRAFT MENU → MAKE PLANKS',
+    check: () => hasInv(BLOCKS.PLANKS.id, 1),
+  },
+  {
+    id: 'wood_pick',
+    text: 'CRAFT A WOODEN PICKAXE ⛏️',
+    check: () => state.tools.pickaxe !== null,
+  },
+  {
+    id: 'get_stone',
+    text: 'MINE STONE (GREY BLOCKS)',
+    check: () => hasInv(BLOCKS.STONE.id, 3),
+  },
+  {
+    id: 'stone_pick',
+    text: 'CRAFT A STONE PICKAXE',
+    check: () => ['stone', 'iron', 'diamond'].includes(state.tools.pickaxe),
+  },
+  {
+    id: 'get_iron',
+    text: 'DIG DEEPER → FIND IRON',
+    check: () => hasInv(BLOCKS.IRON.id, 3),
+  },
+  {
+    id: 'iron_pick',
+    text: 'CRAFT AN IRON PICKAXE',
+    check: () => ['iron', 'diamond'].includes(state.tools.pickaxe),
+  },
+  {
+    id: 'get_diamond',
+    text: 'FIND DIAMOND 💎 DEEP UNDERGROUND',
+    check: () => hasInv(BLOCKS.DIAMOND.id, 3),
+  },
+  {
+    id: 'diamond_pick',
+    text: 'CRAFT A DIAMOND PICKAXE TO WIN!',
+    check: () => state.tools.pickaxe === 'diamond',
+  },
+  {
+    id: 'done',
+    text: '🏆 CHAMPION! KEEP BUILDING!',
+    check: () => false, // stays on last
+  },
+];
+
+let currentObjIdx = 0;
+function updateObjective() {
+  // Advance through completed objectives
+  while (currentObjIdx < OBJECTIVES.length - 1 && OBJECTIVES[currentObjIdx].check()) {
+    currentObjIdx++;
+    const banner = document.getElementById('objective-banner');
+    banner.classList.add('updating');
+    setTimeout(() => banner.classList.remove('updating'), 800);
+  }
+  const textEl = document.getElementById('objective-text');
+  if (textEl) textEl.textContent = OBJECTIVES[currentObjIdx].text;
+}
+
 // ==================== INVENTORY HELPERS ====================
 function addInv(blockId, n = 1) {
   state.inventory[blockId] = (state.inventory[blockId] || 0) + n;
@@ -978,8 +1114,10 @@ function initGame(fresh = false) {
   state.won = false;
   state.paused = false;
 
-  // Initial hint
-  showHint('Break WOOD first — hit trees! 🌳');
+  // Reset objective tracker and check against existing inventory (for loaded saves)
+  currentObjIdx = 0;
+  updateObjective();
+  document.getElementById('objective-banner').classList.add('visible');
 
   document.getElementById('playerDisplay').textContent = state.player.name;
   updateHotbar();
@@ -1160,6 +1298,9 @@ function update() {
 
   // Autosave every 10 seconds
   if (state.time % 600 === 0) saveGame();
+
+  // Update objective banner (lightweight check, runs every frame but advances rarely)
+  updateObjective();
 }
 
 // ==================== MINING ====================
@@ -1217,18 +1358,17 @@ function updateMining() {
     state.items.push(new ItemDrop(tx * BLOCK + BLOCK / 2 - 7, ty * BLOCK + 4, dropType));
     spawnParticles(tx * BLOCK + BLOCK / 2, ty * BLOCK + BLOCK / 2, b.color, 10);
     state.breaking = null;
-
-    // First mining hint
-    if (blockType === BLOCKS.WOOD.id) {
-      showHintOnce('first_wood', 'Got wood! Press C to craft planks & pickaxe');
-    }
   }
 }
 
 // ==================== PLACING ====================
 function tryPlace() {
   const blockType = state.hotbar[state.selected];
-  if (!hasInv(blockType)) { showHint('Out of that block!'); return; }
+  const blockName = BLOCK_BY_ID[blockType].name;
+  if (!hasInv(blockType)) {
+    showHint(`No ${blockName.toUpperCase()} yet — go mine some first!`);
+    return;
+  }
 
   let tx, ty;
   if (isMobile) {
