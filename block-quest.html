@@ -1271,12 +1271,14 @@ function update() {
     return it.life > 0;
   });
 
-  // Mob spawning (at night)
-  state.mobSpawnTimer++;
-  if (state.isNight && state.mobSpawnTimer > 240 && state.mobs.length < 4) {
-    state.mobSpawnTimer = 0;
-    spawnMob();
-  }
+  // Mob spawning disabled for party mode (kids should be able to explore safely)
+  // state.mobSpawnTimer++;
+  // if (state.isNight && state.mobSpawnTimer > 240 && state.mobs.length < 4) {
+  //   state.mobSpawnTimer = 0;
+  //   spawnMob();
+  // }
+  // Clear any mobs that may have loaded from an older save
+  if (state.mobs.length > 0) state.mobs = [];
 
   // Update mobs
   state.mobs = state.mobs.filter(m => updateMob(m));
