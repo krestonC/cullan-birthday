@@ -1009,7 +1009,14 @@ function updateObjective() {
 
 // ==================== INVENTORY HELPERS ====================
 function addInv(blockId, n = 1) {
-  state.inventory[blockId] = (state.inventory[blockId] || 0) + n;
+  // Party mode: first collect of each block fills to 999 so building is fun, not grindy.
+  // Further collects are no-ops (already capped).
+  const current = state.inventory[blockId] || 0;
+  if (current === 0) {
+    state.inventory[blockId] = 999;
+  } else if (current < 999) {
+    state.inventory[blockId] = Math.min(999, current + n);
+  }
 }
 function hasInv(blockId, n = 1) {
   return (state.inventory[blockId] || 0) >= n;
@@ -1402,7 +1409,8 @@ function tryPlace() {
   if (bx < p.x + p.width && bx + BLOCK > p.x && by < p.y + p.height && by + BLOCK > p.y) return;
 
   state.world[tx][ty] = blockType;
-  removeInv(blockType, 1);
+  // Party mode: placing does NOT consume inventory (unlimited blocks).
+  // removeInv(blockType, 1);
   updateHotbar();
 }
 
@@ -1779,7 +1787,8 @@ function updateHotbar() {
 
     const count = document.createElement('span');
     count.className = 'count';
-    count.textContent = state.inventory[id] || 0;
+    const c = state.inventory[id] || 0;
+    count.textContent = c >= 999 ? '∞' : c;
     slot.appendChild(count);
 
     slot.addEventListener('click', () => {
