@@ -926,7 +926,7 @@ const state = {
   mobs: [],
   particles: [],
   keys: {},
-  mouse: { x: 0, y: 0, down: false, rightDown: false },
+  mouse: { x: 0, y: 0, down: false, rightDown: false, onCanvas: false },
   breaking: null,      // { tx, ty, progress }
   time: 0,             // world ticks
   day: 1,
@@ -1581,6 +1581,39 @@ function render() {
     ctx.strokeRect(b.tx * BLOCK + 1, b.ty * BLOCK + 1, BLOCK - 2, BLOCK - 2);
   }
 
+  // Aim cursor (desktop only) — outline the block under the mouse
+  if (!isMobile && state.mouse.onCanvas && !state.paused && !state.dead) {
+    const canvasEl = document.getElementById('game-canvas');
+    const rect = canvasEl.getBoundingClientRect();
+    const worldX = state.mouse.x * (canvasEl.width / rect.width) + state.camera.x;
+    const worldY = state.mouse.y * (canvasEl.height / rect.height) + state.camera.y;
+    const mtx = Math.floor(worldX / BLOCK);
+    const mty = Math.floor(worldY / BLOCK);
+    if (mtx >= 0 && mtx < WORLD_WIDTH && mty >= 0 && mty < WORLD_HEIGHT) {
+      const p = state.player;
+      const px = Math.floor((p.x + p.width / 2) / BLOCK);
+      const py = Math.floor((p.y + p.height / 2) / BLOCK);
+      const inRange = (Math.abs(mtx - px) + Math.abs(mty - py)) <= 5;
+      const bt = state.world[mtx][mty];
+      let color;
+      if (!inRange) color = '#E8442E';            // red: out of range
+      else if (bt !== 0 && canMine(bt)) color = '#4BB04B';   // green: can mine
+      else if (bt !== 0) color = '#FFAA00';       // orange: needs better tool
+      else color = '#FFEB3B';                     // gold: placeable empty slot
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(mtx * BLOCK + 1, mty * BLOCK + 1, BLOCK - 2, BLOCK - 2);
+      ctx.setLineDash([]);
+      // Inner shadow line for contrast on bright backgrounds
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(mtx * BLOCK + 3, mty * BLOCK + 3, BLOCK - 6, BLOCK - 6);
+      ctx.restore();
+    }
+  }
+
   // Draw item drops
   state.items.forEach(it => {
     const bob = Math.sin(it.bob) * 2;
@@ -1884,7 +1917,10 @@ canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   state.mouse.x = e.clientX - rect.left;
   state.mouse.y = e.clientY - rect.top;
+  state.mouse.onCanvas = true;
 });
+canvas.addEventListener('mouseenter', () => { state.mouse.onCanvas = true; });
+canvas.addEventListener('mouseleave', () => { state.mouse.onCanvas = false; state.mouse.down = false; });
 canvas.addEventListener('mouseup', (e) => {
   if (e.button === 0) state.mouse.down = false;
   else if (e.button === 2) state.mouse.rightDown = false;
