@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cullan-Rayne's 7th Birthday — Minecraft Quest</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+<style>
+  /* ========== RESET & BASE ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *::selection { background: #FFAA00; color: #000; }
+
+  html, body {
+    overflow-x: hidden;
+    background: #87CEEB;
+    font-family: 'VT323', monospace;
+    color: #fff;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  body {
+    min-height: 100vh;
+    position: relative;
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><rect x='10' y='2' width='4' height='20' fill='%23fff' stroke='%23000' stroke-width='1'/><rect x='2' y='10' width='20' height='4' fill='%23fff' stroke='%23000' stroke-width='1'/></svg>") 12 12, auto;
+  }
+
+  /* ========== SKY GRADIENT BACKGROUND (PARALLAX LAYER 1) ========== */
+  .sky {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, #4B91D6 0%, #87CEEB 45%, #FFB97A 75%, #5C3317 100%);
+    z-index: -4;
+    animation: dayNightCycle 60s ease-in-out infinite;
+  }
+  @keyframes dayNightCycle {
+    0%, 100% {
+      background: linear-gradient(180deg, #4B91D6 0%, #87CEEB 45%, #FFB97A 75%, #5C3317 100%);
+    }
+    25% {
+      background: linear-gradient(180deg, #FF6B4A 0%, #FFB97A 40%, #FF8A65 70%, #5C3317 100%);
+    }
+    50% {
+      background: linear-gradient(180deg, #0D1B3D 0%, #1A2E5C 45%, #2C3E6E 75%, #0A0A1A 100%);
+    }
+    75% {
+      background: linear-gradient(180deg, #FFB97A 0%, #FF9C7A 40%, #87CEEB 75%, #5C3317 100%);
+    }
+  }
+
+  /* ========== SUN / MOON ========== */
+  .celestial {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    width: 60px;
+    height: 60px;
+    z-index: -4;
+    pointer-events: none;
+    animation: sunArc 60s linear infinite;
+  }
+  .sun {
+    width: 100%;
+    height: 100%;
+    background: #FFEB3B;
+    border: 4px solid #FFC107;
+    box-shadow: 0 0 30px #FFEB3B, 0 0 60px rgba(255,235,59,0.4);
+    animation: sunMoonSwap 60s linear infinite;
+  }
+  @keyframes sunArc {
+    0%   { transform: translate(-50%, 0) rotate(0deg) translateX(40vw) rotate(0deg); }
+    100% { transform: translate(-50%, 0) rotate(360deg) translateX(40vw) rotate(-360deg); }
+  }
+  @keyframes sunMoonSwap {
+    0%, 40% { background: #FFEB3B; border-color: #FFC107; box-shadow: 0 0 30px #FFEB3B; }
+    50%     { background: #E0E0E0; border-color: #9E9E9E; box-shadow: 0 0 20px #fff; }
+    60%, 90% { background: #E0E0E0; border-color: #9E9E9E; box-shadow: 0 0 20px #fff; }
+    100%    { background: #FFEB3B; border-color: #FFC107; box-shadow: 0 0 30px #FFEB3B; }
+  }
+
+  /* ========== STARS (visible during night phase) ========== */
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+    opacity: 0;
+    animation: starsVisible 60s linear infinite;
+  }
+  @keyframes starsVisible {
+    0%, 35%, 70%, 100% { opacity: 0; }
+    45%, 60% { opacity: 1; }
+  }
+  .star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.4); }
+  }
+
+  /* ========== PIXEL CLOUDS (PARALLAX LAYER 2) ========== */
+  .clouds {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+  }
+  .cloud {
+    position: absolute;
+    background: #fff;
+    box-shadow:
+      8px 0 0 #fff, 16px 0 0 #fff, 24px 0 0 #fff, 32px 0 0 #fff, 40px 0 0 #fff,
+      8px -8px 0 #fff, 16px -8px 0 #fff, 24px -8px 0 #fff, 32px -8px 0 #fff,
+      -8px 0 0 #fff, 16px 8px 0 #fff, 24px 8px 0 #fff;
+    width: 8px;
+    height: 8px;
+    opacity: 0.9;
+    animation: cloudDrift linear infinite;
+  }
+  .cloud:nth-child(1) { top: 8%;  left: -10%; animation-duration: 80s; transform: scale(2); }
+  .cloud:nth-child(2) { top: 18%; left: -15%; animation-duration: 110s; animation-delay: -30s; transform: scale(1.5); }
+  .cloud:nth-child(3) { top: 5%;  left: -20%; animation-duration: 140s; animation-delay: -70s; transform: scale(2.5); }
+  .cloud:nth-child(4) { top: 25%; left: -10%; animation-duration: 95s; animation-delay: -50s; transform: scale(1.2); }
+
+  @keyframes cloudDrift {
+    from { transform: translateX(0) scale(var(--s, 2)); }
+    to   { transform: translateX(120vw) scale(var(--s, 2)); }
+  }
+
+  /* ========== FALLING PARTICLES (SNOW/PIXELS) ========== */
+  .particles {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    opacity: 0.6;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    from { transform: translateY(-10vh) translateX(0); opacity: 0; }
+    10%  { opacity: 0.8; }
+    90%  { opacity: 0.8; }
+    to   { transform: translateY(110vh) translateX(30px); opacity: 0; }
+  }
+
+  /* ========== FLYING STEVE (THE MAIN CHARACTER) ========== */
+  .steve-flyer {
+    position: fixed;
+    top: 15%;
+    left: -120px;
+    width: 80px;
+    height: 80px;
+    z-index: 2;
+    pointer-events: none;
+    animation: steveFlight 18s linear infinite;
+  }
+  @keyframes steveFlight {
+    0%   { left: -120px; top: 15%; transform: scaleX(1) rotate(-5deg); }
+    20%  { top: 8%; transform: scaleX(1) rotate(-8deg); }
+    40%  { top: 25%; transform: scaleX(1) rotate(10deg); }
+    49%  { left: 100vw; top: 20%; transform: scaleX(1) rotate(-5deg); }
+    50%  { left: 100vw; top: 20%; transform: scaleX(-1) rotate(-5deg); }
+    70%  { top: 35%; transform: scaleX(-1) rotate(8deg); }
+    85%  { top: 12%; transform: scaleX(-1) rotate(-10deg); }
+    99%  { left: -120px; top: 18%; transform: scaleX(-1) rotate(-5deg); }
+    100% { left: -120px; top: 15%; transform: scaleX(1) rotate(-5deg); }
+  }
+
+  .steve-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: steveBob 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes steveBob {
+    from { transform: translateY(-3px); }
+    to   { transform: translateY(3px); }
+  }
+
+  /* Steve body parts — built from pixel blocks */
+  .steve-head {
+    position: absolute;
+    top: 6px;
+    left: 24px;
+    width: 28px;
+    height: 28px;
+    background:
+      /* Hair top */
+      linear-gradient(180deg, #3D2817 0%, #3D2817 30%, transparent 30%),
+      /* Face */
+      #D2A679;
+    border: 2px solid #000;
+    box-shadow: inset 2px 0 0 rgba(0,0,0,0.15);
+  }
+  .steve-head::before {
+    /* Eyes */
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 4px;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    box-shadow:
+      2px 0 0 #3D1F6F,
+      12px 0 0 #fff,
+      14px 0 0 #3D1F6F;
+  }
+  .steve-head::after {
+    /* Mouth */
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 9px;
+    width: 8px;
+    height: 2px;
+    background: #6D4C3D;
+  }
+
+  .steve-body {
+    position: absolute;
+    top: 32px;
+    left: 26px;
+    width: 24px;
+    height: 22px;
+    background: #26A5D4;
+    border: 2px solid #000;
+    box-shadow: inset 2px 0 0 rgba(0,0,0,0.2), inset -2px 0 0 rgba(255,255,255,0.15);
+  }
+  .steve-arm {
+    position: absolute;
+    top: 32px;
+    width: 6px;
+    height: 18px;
+    background: #D2A679;
+    border: 2px solid #000;
+    animation: armFlap 0.4s ease-in-out infinite alternate;
+    transform-origin: top center;
+  }
+  .steve-arm.left  { left: 16px; }
+  .steve-arm.right { right: 16px; animation-delay: 0.2s; }
+  @keyframes armFlap {
+    from { transform: rotate(-15deg); }
+    to   { transform: rotate(15deg); }
+  }
+
+  .steve-leg {
+    position: absolute;
+    top: 54px;
+    width: 8px;
+    height: 16px;
+    background: #4A3A8A;
+    border: 2px solid #000;
+  }
+  .steve-leg.left  { left: 28px; }
+  .steve-leg.right { left: 40px; }
+
+  /* Elytra wings */
+  .elytra {
+    position: absolute;
+    top: 28px;
+    width: 22px;
+    height: 26px;
+    background: linear-gradient(135deg, #7B3F9C 0%, #4A1A6F 50%, #2E1055 100%);
+    border: 2px solid #000;
+    animation: wingFlap 0.15s ease-in-out infinite alternate;
+  }
+  .elytra.left {
+    left: 12px;
+    clip-path: polygon(100% 0, 100% 100%, 0 90%, 20% 40%);
+    transform-origin: right center;
+  }
+  .elytra.right {
+    right: 12px;
+    clip-path: polygon(0 0, 100% 40%, 80% 90%, 0 100%);
+    transform-origin: left center;
+    animation-delay: 0.075s;
+  }
+  @keyframes wingFlap {
+    from { transform: scaleX(1) rotate(-3deg); }
+    to   { transform: scaleX(0.85) rotate(-12deg); }
+  }
+
+  /* Trail particles behind Steve */
+  .steve-trail {
+    position: absolute;
+    top: 40px;
+    left: -8px;
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    opacity: 0.7;
+    animation: trailFade 0.6s ease-out infinite;
+  }
+  .steve-trail:nth-child(2) { top: 48px; left: -14px; animation-delay: 0.2s; }
+  .steve-trail:nth-child(3) { top: 36px; left: -20px; animation-delay: 0.4s; }
+  @keyframes trailFade {
+    from { opacity: 0.8; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.3) translateX(-10px); }
+  }
+
+  /* ========== CREEPER PEEK (from bottom edge, occasional) ========== */
+  .creeper {
+    position: fixed;
+    bottom: -80px;
+    right: 10%;
+    width: 50px;
+    height: 70px;
+    z-index: 3;
+    pointer-events: none;
+    animation: creeperPeek 12s ease-in-out infinite;
+    animation-delay: 4s;
+  }
+  @keyframes creeperPeek {
+    0%, 70%, 100% { bottom: -80px; transform: translateX(0); }
+    75% { bottom: -20px; transform: translateX(0); }
+    78% { bottom: -15px; transform: translateX(-3px); }
+    82% { bottom: -15px; transform: translateX(3px); }
+    85% { bottom: -15px; transform: translateX(0); }
+    90% { bottom: -80px; transform: translateX(0); }
+  }
+
+  .creeper-body {
+    width: 100%;
+    height: 100%;
+    background:
+      /* face features via gradients */
+      radial-gradient(circle at 30% 35%, #1A1A1A 3px, transparent 3.5px),
+      radial-gradient(circle at 70% 35%, #1A1A1A 3px, transparent 3.5px),
+      /* mouth */
+      linear-gradient(180deg, transparent 50%, #1A1A1A 50%, #1A1A1A 70%, transparent 70%),
+      /* base green */
+      repeating-linear-gradient(45deg,
+        #4FA64F 0 4px, #5FB65F 4px 8px, #4A9A4A 8px 12px);
+    border: 3px solid #000;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.4);
+  }
+
+  /* ========== SLIMES (bouncing at bottom of sections) ========== */
+  .slime {
+    position: absolute;
+    width: 32px;
+    height: 28px;
+    background: linear-gradient(180deg, #76FF03 0%, #4A9A2A 100%);
+    border: 3px solid #000;
+    border-radius: 6px;
+    box-shadow:
+      inset -4px -4px 0 rgba(0,0,0,0.2),
+      inset 4px 4px 0 rgba(255,255,255,0.15);
+    animation: slimeBounce 1.2s ease-in-out infinite;
+    z-index: 5;
+  }
+  .slime::before, .slime::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    background: #000;
+  }
+  .slime::before { left: 7px; }
+  .slime::after  { right: 7px; }
+  @keyframes slimeBounce {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    45%      { transform: translateY(-18px) scale(0.9, 1.1); }
+    55%      { transform: translateY(-18px) scale(0.9, 1.1); }
+    90%      { transform: translateY(0) scale(1.1, 0.85); }
+  }
+  .slime.left  { bottom: -30px; left: -14px; animation-delay: 0s; }
+  .slime.right { bottom: -30px; right: -14px; animation-delay: 0.6s; transform-origin: bottom center; }
+
+  /* ========== SOUND TOGGLE BUTTON ========== */
+  .sound-toggle {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 44px;
+    height: 44px;
+    background: #1A1A1A;
+    border: 3px solid #000;
+    box-shadow: inset 0 0 0 2px #5A5A5A, 4px 4px 0 rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 101;
+    font-size: 20px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .sound-toggle:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: inset 0 0 0 2px #7A7A7A, 6px 6px 0 rgba(0,0,0,0.8);
+  }
+  .sound-toggle:active {
+    transform: translate(2px, 2px);
+  }
+  .sound-toggle.muted { opacity: 0.6; }
+
+  /* ========== MINING SPARK (click anywhere effect) ========== */
+  .spark {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background: #FFF176;
+    border: 1px solid #000;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  /* ========== MAIN CONTAINER ========== */
+  .world {
+    position: relative;
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+    max-width: 640px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /* ========== DIRT/GRASS BORDER FRAME ========== */
+  .frame {
+    position: relative;
+    background: #8B5A2B;
+    border: 4px solid #000;
+    padding: 14px;
+    box-shadow:
+      0 0 0 4px #5C3317,
+      inset 0 0 0 2px #A0522D,
+      8px 8px 0 rgba(0,0,0,0.4);
+    margin-bottom: 20px;
+  }
+  .frame::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -4px; right: -4px;
+    height: 12px;
+    background:
+      repeating-linear-gradient(90deg,
+        #3FA03F 0 8px, #4BB04B 8px 16px, #3FA03F 16px 24px, #57BF57 24px 32px);
+    border: 4px solid #000;
+    border-bottom: 2px solid #000;
+  }
+
+  /* ========== HERO BANNER (grass block style) ========== */
+  .banner {
+    background:
+      repeating-linear-gradient(0deg,
+        #57BF57 0 4px, #4BB04B 4px 8px, #3FA03F 8px 12px, #4BB04B 12px 16px);
+    border: 4px solid #000;
+    padding: 24px 16px 20px;
+    position: relative;
+    text-align: center;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
+    overflow: hidden;
+  }
+  .banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.2) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .invited {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #FFF176;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    text-shadow: 2px 2px 0 #000;
+    animation: sparkle 2s ease-in-out infinite;
+  }
+  @keyframes sparkle {
+    0%, 100% { text-shadow: 2px 2px 0 #000, 0 0 0 transparent; }
+    50%      { text-shadow: 2px 2px 0 #000, 0 0 12px #FFF176; }
+  }
+  .invited::before, .invited::after {
+    content: '✦';
+    margin: 0 8px;
+    color: #fff;
+  }
+
+  .hero-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(24px, 7vw, 38px);
+    color: #FFC107;
+    text-shadow:
+      3px 3px 0 #8B4513,
+      6px 6px 0 #000;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    animation: heroFloat 3s ease-in-out infinite;
+  }
+  .hero-name span {
+    display: block;
+    margin-top: 8px;
+  }
+  @keyframes heroFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+
+  /* ========== ANIMATED "7" BLOCK ========== */
+  .age-block {
+    display: inline-block;
+    background: #E8442E;
+    border: 4px solid #000;
+    box-shadow:
+      inset 0 0 0 3px #FF6B4A,
+      inset 0 -6px 0 3px #8B2511,
+      6px 6px 0 rgba(0,0,0,0.5);
+    padding: 14px 24px;
+    margin: 16px 0 12px;
+    position: relative;
+    animation: blockBob 2s ease-in-out infinite;
+    transition: transform 0.15s;
+    cursor: pointer;
+  }
+  .age-block:hover {
+    animation: blockShake 0.3s ease-in-out;
+  }
+  .age-block:active {
+    transform: scale(0.92);
+  }
+  @keyframes blockBob {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50%      { transform: translateY(-8px) rotate(2deg); }
+  }
+  @keyframes blockShake {
+    0%, 100% { transform: translateY(-8px) rotate(0deg); }
+    25%      { transform: translateY(-10px) rotate(-8deg); }
+    75%      { transform: translateY(-10px) rotate(8deg); }
+  }
+  .age-block .seven {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 48px;
+    color: #FFE082;
+    text-shadow: 3px 3px 0 #000;
+    line-height: 1;
+  }
+
+  .years-old {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: #FFF176;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 0 #000;
+    margin-top: 10px;
+  }
+
+  /* ========== INFO CARDS (DATE / TIME / LOCATION) ========== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .info-card {
+    background: #1A1A1A;
+    border: 4px solid #000;
+    padding: 14px 10px;
+    text-align: center;
+    position: relative;
+    box-shadow:
+      inset 0 0 0 2px #3A3A3A,
+      4px 4px 0 rgba(0,0,0,0.6);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
+  .info-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow:
+      inset 0 0 0 2px #5A5A5A,
+      6px 6px 0 rgba(0,0,0,0.8);
+  }
+  .info-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: inset 0 0 0 2px #3A3A3A, 0 0 0 rgba(0,0,0,0);
+  }
+  .info-card.full { grid-column: 1 / -1; }
+
+  .info-icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 6px;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.8));
+    animation: iconPulse 3s ease-in-out infinite;
+  }
+  .info-card:nth-child(2) .info-icon { animation-delay: 0.5s; }
+  .info-card:nth-child(3) .info-icon { animation-delay: 1s; }
+
+  @keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+  }
+
+  .info-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #9E9E9E;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .info-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #FFC107;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ========== TORCH (on location card) ========== */
+  .torch {
+    position: absolute;
+    top: -20px;
+    right: -10px;
+    width: 20px;
+    height: 44px;
+    z-index: 5;
+  }
+  .torch-stick {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 28px;
+    background: linear-gradient(180deg, #B8752F 0%, #8B5A2B 50%, #5C3317 100%);
+    border: 2px solid #000;
+  }
+  .flame {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 18px;
+    background: radial-gradient(ellipse at 50% 70%, #FFEB3B 0%, #FF9800 40%, #F44336 80%, transparent 100%);
+    border-radius: 50% 50% 50% 50% / 80% 80% 30% 30%;
+    filter: blur(1px);
+    animation: flicker 0.15s infinite alternate;
+    box-shadow:
+      0 0 8px #FF9800,
+      0 0 16px #FF5722,
+      0 0 28px rgba(255,152,0,0.6);
+  }
+  @keyframes flicker {
+    0%   { transform: translateX(-50%) scale(1, 1) rotate(-2deg); opacity: 0.95; }
+    100% { transform: translateX(-50%) scale(1.1, 1.15) rotate(2deg); opacity: 1; }
+  }
+
+  /* ========== DIVIDER (tnt stripe) ========== */
+  .tnt-divider {
+    height: 12px;
+    margin: 20px 0;
+    background:
+      repeating-linear-gradient(90deg,
+        #FFC107 0 10px, #1A1A1A 10px 20px);
+    border: 3px solid #000;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+    animation: stripeShift 3s linear infinite;
+  }
+  @keyframes stripeShift {
+    from { background-position: 0 0; }
+    to   { background-position: 40px 0; }
+  }
+
+  /* ========== QUEST ACTIVITIES PANEL ========== */
+  .panel {
+    background: #2B5FAD;
+    border: 4px solid #000;
+    padding: 18px 14px;
+    box-shadow:
+      inset 0 0 0 2px #4A7BC6,
+      inset 0 -6px 0 2px #1A3F80,
+      4px 4px 0 rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .panel.inventory {
+    background: #6B4423;
+    box-shadow:
+      inset 0 0 0 2px #8B5A2B,
+      inset 0 -6px 0 2px #4A2F18,
+      4px 4px 0 rgba(0,0,0,0.5);
+    margin-top: 18px;
+  }
+
+  .panel-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #FFF176;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .panel-title .deco { color: #FF6B4A; }
+
+  .activities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 10px;
+  }
+  .activity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px;
+    border-radius: 2px;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .activity:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateX(2px);
+  }
+  .activity-icon {
+    font-size: 22px;
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.8));
+    transition: transform 0.2s;
+  }
+  .activity:hover .activity-icon {
+    transform: scale(1.25) rotate(-5deg);
+  }
+  .activity-label {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ========== INVENTORY SLOTS ========== */
+  .inventory-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .inv-slot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.25);
+    border: 2px solid #000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .inv-slot:hover {
+    background: rgba(0,0,0,0.45);
+    transform: translateX(4px);
+    border-color: #FFC107;
+  }
+  .inv-slot-icon {
+    font-size: 22px;
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.8));
+  }
+  .inv-slot-label {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ========== RSVP BUTTON ========== */
+  .rsvp-section {
+    margin-top: 24px;
+    text-align: center;
+  }
+  .rsvp-btn {
+    display: inline-block;
+    background: #25D366;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 16px 24px;
+    border: 4px solid #000;
+    text-decoration: none;
+    text-shadow: 2px 2px 0 #064E2B;
+    box-shadow:
+      inset 0 0 0 2px #4FE584,
+      inset 0 -6px 0 2px #128C3E,
+      6px 6px 0 rgba(0,0,0,0.6);
+    position: relative;
+    transition: transform 0.12s, box-shadow 0.12s;
+    animation: rsvpPulse 2.5s ease-in-out infinite;
+    cursor: pointer;
+  }
+  .rsvp-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow:
+      inset 0 0 0 2px #4FE584,
+      inset 0 -6px 0 2px #128C3E,
+      8px 8px 0 rgba(0,0,0,0.8);
+  }
+  .rsvp-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow:
+      inset 0 0 0 2px #4FE584,
+      inset 0 -6px 0 2px #128C3E,
+      0 0 0 rgba(0,0,0,0);
+  }
+  @keyframes rsvpPulse {
+    0%, 100% {
+      box-shadow:
+        inset 0 0 0 2px #4FE584,
+        inset 0 -6px 0 2px #128C3E,
+        6px 6px 0 rgba(0,0,0,0.6),
+        0 0 0 0 rgba(37, 211, 102, 0.6);
+    }
+    50% {
+      box-shadow:
+        inset 0 0 0 2px #4FE584,
+        inset 0 -6px 0 2px #128C3E,
+        6px 6px 0 rgba(0,0,0,0.6),
+        0 0 0 12px rgba(37, 211, 102, 0);
+    }
+  }
+  .rsvp-btn .wa-icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 16px;
+    vertical-align: middle;
+  }
+  .rsvp-hint {
+    display: block;
+    margin-top: 12px;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #FFF176;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1px;
+  }
+
+  /* ========== FOOTER CRAFTING BAR ========== */
+  .crafting-bar {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 3px solid #000;
+    box-shadow: inset 0 0 0 2px #5A5A5A;
+  }
+  .craft-slot {
+    width: 48px;
+    height: 48px;
+    background: #3A3A3A;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #5A5A5A, inset -2px -2px 0 #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .craft-slot:hover {
+    background: #5A5A5A;
+    transform: translateY(-4px);
+    box-shadow: inset 2px 2px 0 #7A7A7A, inset -2px -2px 0 #2A2A2A, 0 4px 0 rgba(0,0,0,0.5);
+  }
+  .craft-slot:active {
+    transform: translateY(0);
+  }
+
+  /* ========== BEDROCK FOOTER ========== */
+  .bedrock {
+    margin-top: 20px;
+    height: 16px;
+    background:
+      repeating-linear-gradient(45deg,
+        #4A4A4A 0 6px, #5A5A5A 6px 12px, #3A3A3A 12px 18px, #6A6A6A 18px 24px);
+    border: 3px solid #000;
+  }
+
+  /* ========== XP BAR ========== */
+  .xp-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+  .xp-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+  .xp-bar {
+    height: 14px;
+    background: #1A1A1A;
+    border: 2px solid #000;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px #3A3A3A;
+  }
+  .xp-fill {
+    height: 100%;
+    width: 70%;
+    background: linear-gradient(180deg, #76FF03 0%, #4CAF50 50%, #2E7D32 100%);
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.2);
+    animation: xpGlow 2s ease-in-out infinite;
+  }
+  @keyframes xpGlow {
+    0%, 100% { box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.2), 0 0 4px #76FF03; }
+    50%      { box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.2), 0 0 12px #76FF03; }
+  }
+
+  /* ========== ACHIEVEMENT TOAST (on load) ========== */
+  .achievement {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    background: #1A1A1A;
+    border: 3px solid #FFC107;
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 100;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.6);
+    animation: slideIn 0.6s ease-out 1.2s forwards, slideOut 0.6s ease-in 5s forwards;
+    max-width: 260px;
+  }
+  @keyframes slideIn {
+    to { right: 20px; }
+  }
+  @keyframes slideOut {
+    to { right: -400px; }
+  }
+  .achievement-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .achievement-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #FFC107;
+    line-height: 1.6;
+  }
+  .achievement-text small {
+    display: block;
+    color: #fff;
+    font-size: 7px;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  /* ========== MOBILE RESPONSIVE ========== */
+  @media (max-width: 420px) {
+    .world { padding: 20px 10px 60px; }
+    .hero-name { font-size: 22px; }
+    .age-block .seven { font-size: 38px; }
+    .info-value { font-size: 10px; }
+    .activities { grid-template-columns: 1fr; }
+    .rsvp-btn { font-size: 11px; padding: 14px 18px; }
+  }
+
+  /* ========== ENTRY ANIMATIONS (staggered reveal) ========== */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: revealUp 0.6s ease-out forwards;
+  }
+  .reveal:nth-child(1) { animation-delay: 0.1s; }
+  .reveal:nth-child(2) { animation-delay: 0.3s; }
+  .reveal:nth-child(3) { animation-delay: 0.5s; }
+  .reveal:nth-child(4) { animation-delay: 0.7s; }
+  .reveal:nth-child(5) { animation-delay: 0.9s; }
+  .reveal:nth-child(6) { animation-delay: 1.1s; }
+  .reveal:nth-child(7) { animation-delay: 1.3s; }
+
+  @keyframes revealUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- SKY & ATMOSPHERE -->
+<div class="sky"></div>
+<div class="stars" id="stars"></div>
+<div class="celestial"><div class="sun"></div></div>
+<div class="clouds">
+  <div class="cloud"></div>
+  <div class="cloud"></div>
+  <div class="cloud"></div>
+  <div class="cloud"></div>
+</div>
+<div class="particles" id="particles"></div>
+
+<!-- SOUND TOGGLE -->
+<div class="sound-toggle" id="soundToggle" title="Toggle soundtrack">🔊</div>
+
+<!-- FLYING STEVE CHARACTER -->
+<div class="steve-flyer" aria-hidden="true">
+  <div class="steve-wrap">
+    <div class="steve-trail"></div>
+    <div class="steve-trail"></div>
+    <div class="steve-trail"></div>
+    <div class="elytra left"></div>
+    <div class="elytra right"></div>
+    <div class="steve-head"></div>
+    <div class="steve-body"></div>
+    <div class="steve-arm left"></div>
+    <div class="steve-arm right"></div>
+    <div class="steve-leg left"></div>
+    <div class="steve-leg right"></div>
+  </div>
+</div>
+
+<!-- CREEPER PEEK -->
+<div class="creeper" aria-hidden="true">
+  <div class="creeper-body"></div>
+</div>
+
+<!-- ACHIEVEMENT TOAST -->
+<div class="achievement">
+  <div class="achievement-icon">🏆</div>
+  <div class="achievement-text">
+    ACHIEVEMENT UNLOCKED!
+    <small>Invited to the quest</small>
+  </div>
+</div>
+
+<!-- MAIN WORLD -->
+<main class="world">
+
+  <div class="frame reveal">
+    <div class="banner">
+      <div class="invited">YOU ARE INVITED</div>
+
+      <h1 class="hero-name">
+        CULLAN-RAYNE'S
+        <span>BIRTHDAY PARTY!</span>
+      </h1>
+
+      <div class="age-block" id="ageBlock">
+        <div class="seven">7</div>
+      </div>
+
+      <div class="years-old">YEARS OLD!</div>
+    </div>
+  </div>
+
+  <!-- DATE / TIME -->
+  <div class="info-grid reveal">
+    <div class="info-card">
+      <span class="info-icon">📅</span>
+      <div class="info-label">DATE</div>
+      <div class="info-value">Wednesday<br>23 APR 2026</div>
+    </div>
+    <div class="info-card">
+      <span class="info-icon">⏰</span>
+      <div class="info-label">TIME</div>
+      <div class="info-value">After School<br>until 19:00</div>
+    </div>
+  </div>
+
+  <!-- LOCATION with torch -->
+  <div class="info-grid reveal" style="margin-top: 12px;">
+    <div class="info-card full" style="position: relative;">
+      <div class="torch">
+        <div class="flame"></div>
+        <div class="torch-stick"></div>
+      </div>
+      <span class="info-icon">📍</span>
+      <div class="info-label">LOCATION</div>
+      <div class="info-value">Fresnaye G06</div>
+    </div>
+  </div>
+
+  <!-- TNT DIVIDER -->
+  <div class="tnt-divider reveal"></div>
+
+  <!-- QUEST ACTIVITIES -->
+  <div class="panel reveal" style="position: relative;">
+    <div class="slime left"></div>
+    <div class="slime right"></div>
+    <div class="panel-title">
+      <span class="deco">✦</span> QUEST ACTIVITIES <span class="deco">✦</span>
+    </div>
+    <div class="activities">
+      <div class="activity">
+        <span class="activity-icon">🎬</span>
+        <span class="activity-label">Movie Time</span>
+      </div>
+      <div class="activity">
+        <span class="activity-icon">🍿</span>
+        <span class="activity-label">Snacks &amp; Treats</span>
+      </div>
+      <div class="activity">
+        <span class="activity-icon">🎂</span>
+        <span class="activity-label">Birthday Cake</span>
+      </div>
+      <div class="activity">
+        <span class="activity-icon">🛁</span>
+        <span class="activity-label">Jacuzzi Fun!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="panel inventory reveal">
+    <div class="panel-title">
+      <span class="deco">🎒</span> PACK YOUR INVENTORY <span class="deco">🎒</span>
+    </div>
+    <div class="inventory-list">
+      <div class="inv-slot">
+        <span class="inv-slot-icon">🩱</span>
+        <span class="inv-slot-label">Swim costume</span>
+      </div>
+      <div class="inv-slot">
+        <span class="inv-slot-icon">🧖</span>
+        <span class="inv-slot-label">Towel</span>
+      </div>
+      <div class="inv-slot">
+        <span class="inv-slot-icon">👕</span>
+        <span class="inv-slot-label">Extra clothing</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- XP BAR -->
+  <div class="xp-section reveal">
+    <div class="xp-label">LEVEL UP: 7 XP</div>
+    <div class="xp-bar"><div class="xp-fill"></div></div>
+  </div>
+
+  <!-- RSVP -->
+  <div class="rsvp-section reveal">
+    <a class="rsvp-btn"
+       href="https://wa.me/27659365333?text=Hi%20Magenta%2C%20RSVP%20for%20Cullan-Rayne%27s%207th%20Birthday%20Quest%20%F0%9F%8E%82"
+       target="_blank"
+       rel="noopener">
+      <span class="wa-icon">💬</span>RSVP ON WHATSAPP
+    </a>
+    <span class="rsvp-hint">↳ Tap to confirm your quest slot</span>
+  </div>
+
+  <!-- CRAFTING BAR -->
+  <div class="crafting-bar reveal">
+    <div class="craft-slot">⛏️</div>
+    <div class="craft-slot">🌍</div>
+    <div class="craft-slot">🎮</div>
+    <div class="craft-slot">💎</div>
+    <div class="craft-slot">🗡️</div>
+  </div>
+
+  <div class="bedrock"></div>
+</main>
+
+<script>
+  /* ========== FALLING PIXEL PARTICLES ========== */
+  (function spawnParticles() {
+    const container = document.getElementById('particles');
+    const count = 40;
+    const colors = ['#ffffff', '#FFF176', '#76FF03', '#29B6F6'];
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.top = Math.random() * -100 + '%';
+      p.style.width = (2 + Math.random() * 4) + 'px';
+      p.style.height = p.style.width;
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration = (6 + Math.random() * 10) + 's';
+      p.style.animationDelay = -Math.random() * 10 + 's';
+      p.style.opacity = 0.3 + Math.random() * 0.5;
+      container.appendChild(p);
+    }
+  })();
+
+  /* ========== STARS GENERATOR ========== */
+  (function spawnStars() {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.top = Math.random() * 60 + '%';
+      s.style.animationDelay = Math.random() * 2 + 's';
+      container.appendChild(s);
+    }
+  })();
+
+  /* ========== PARALLAX SCROLL ========== */
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrolled = window.pageYOffset;
+        const clouds = document.querySelector('.clouds');
+        const particles = document.querySelector('.particles');
+        if (clouds) clouds.style.transform = `translateY(${scrolled * 0.3}px)`;
+        if (particles) particles.style.transform = `translateY(${scrolled * 0.15}px)`;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  /* ========== AUDIO ENGINE ========== */
+  let audioCtx = null;
+  let masterGain = null;
+  let soundtrackPlaying = false;
+  let soundtrackNodes = [];
+  let soundtrackTimer = null;
+  let isMuted = false;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.18;
+      masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  /* Block-place click sound */
+  function playBlockSound() {
+    try {
+      ensureAudio();
+      if (isMuted) return;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(180, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.08);
+      g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + 0.12);
+    } catch (e) { /* silent */ }
+  }
+
+  /* Minecraft-style ambient soundtrack
+     Uses C13 theme-inspired gentle piano notes with sine waves.
+     Chord progression: C major — A minor — F major — G major, slow tempo.
+  */
+  const melody = [
+    // [frequency Hz, duration seconds, delay seconds from start]
+    // Bar 1 — C major feel
+    [523.25, 0.9, 0.0],   // C5
+    [659.25, 0.9, 1.0],   // E5
+    [783.99, 0.9, 2.0],   // G5
+    [659.25, 0.9, 3.0],   // E5
+    // Bar 2 — A minor
+    [440.00, 0.9, 4.0],   // A4
+    [523.25, 0.9, 5.0],   // C5
+    [659.25, 0.9, 6.0],   // E5
+    [523.25, 0.9, 7.0],   // C5
+    // Bar 3 — F major
+    [349.23, 0.9, 8.0],   // F4
+    [523.25, 0.9, 9.0],   // C5
+    [698.46, 0.9, 10.0],  // F5
+    [523.25, 0.9, 11.0],  // C5
+    // Bar 4 — G major
+    [392.00, 0.9, 12.0],  // G4
+    [587.33, 0.9, 13.0],  // D5
+    [783.99, 0.9, 14.0],  // G5
+    [587.33, 0.9, 15.0],  // D5
+  ];
+
+  const bassNotes = [
+    [130.81, 2.0, 0.0],   // C3
+    [130.81, 2.0, 2.0],
+    [110.00, 2.0, 4.0],   // A2
+    [110.00, 2.0, 6.0],
+    [87.31, 2.0, 8.0],    // F2
+    [87.31, 2.0, 10.0],
+    [98.00, 2.0, 12.0],   // G2
+    [98.00, 2.0, 14.0],
+  ];
+
+  function playNote(freq, duration, delay, type = 'sine', volume = 0.08) {
+    const start = audioCtx.currentTime + delay;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    filter.type = 'lowpass';
+    filter.frequency.value = 2000;
+    filter.Q.value = 1;
+
+    o.type = type;
+    o.frequency.value = freq;
+
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(volume, start + 0.05);
+    g.gain.linearRampToValueAtTime(volume * 0.6, start + duration * 0.4);
+    g.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+    o.connect(filter);
+    filter.connect(g);
+    g.connect(masterGain);
+
+    o.start(start);
+    o.stop(start + duration + 0.05);
+
+    soundtrackNodes.push(o, g, filter);
+    return o;
+  }
+
+  function playSoundtrackLoop() {
+    if (!soundtrackPlaying) return;
+    const loopDuration = 16; // seconds per full progression
+
+    melody.forEach(([freq, dur, delay]) => {
+      playNote(freq, dur, delay, 'triangle', 0.06);
+    });
+    bassNotes.forEach(([freq, dur, delay]) => {
+      playNote(freq, dur, delay, 'sine', 0.1);
+    });
+
+    // Subtle pad on top
+    melody.forEach(([freq, dur, delay]) => {
+      playNote(freq * 2, dur * 0.8, delay + 0.2, 'sine', 0.025);
+    });
+
+    // Clean up old nodes array to prevent memory growth
+    if (soundtrackNodes.length > 200) {
+      soundtrackNodes = soundtrackNodes.slice(-100);
+    }
+
+    soundtrackTimer = setTimeout(playSoundtrackLoop, loopDuration * 1000);
+  }
+
+  function startSoundtrack() {
+    ensureAudio();
+    if (soundtrackPlaying) return;
+    soundtrackPlaying = true;
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1);
+    playSoundtrackLoop();
+  }
+
+  function stopSoundtrack() {
+    soundtrackPlaying = false;
+    if (soundtrackTimer) { clearTimeout(soundtrackTimer); soundtrackTimer = null; }
+    if (masterGain) {
+      masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+    }
+  }
+
+  /* ========== SOUND TOGGLE BUTTON ========== */
+  const soundToggle = document.getElementById('soundToggle');
+  let soundtrackStarted = false;
+
+  soundToggle.addEventListener('click', () => {
+    ensureAudio();
+    if (!soundtrackStarted) {
+      soundtrackStarted = true;
+      isMuted = false;
+      startSoundtrack();
+      soundToggle.textContent = '🔊';
+      soundToggle.classList.remove('muted');
+    } else if (soundtrackPlaying) {
+      stopSoundtrack();
+      isMuted = true;
+      soundToggle.textContent = '🔇';
+      soundToggle.classList.add('muted');
+    } else {
+      isMuted = false;
+      startSoundtrack();
+      soundToggle.textContent = '🔊';
+      soundToggle.classList.remove('muted');
+    }
+    playBlockSound();
+  });
+
+  /* Auto-start soundtrack on first user interaction (browser autoplay policy) */
+  function autoStartOnce() {
+    if (!soundtrackStarted) {
+      soundtrackStarted = true;
+      startSoundtrack();
+    }
+    document.removeEventListener('click', autoStartOnce);
+    document.removeEventListener('touchstart', autoStartOnce);
+  }
+  document.addEventListener('click', autoStartOnce, { once: false });
+  document.addEventListener('touchstart', autoStartOnce, { once: false });
+
+  /* ========== INTERACTIVE CLICK SOUNDS ========== */
+  document.getElementById('ageBlock')?.addEventListener('click', playBlockSound);
+  document.querySelectorAll('.craft-slot').forEach(el => el.addEventListener('click', playBlockSound));
+  document.querySelectorAll('.info-card, .inv-slot, .activity').forEach(el => {
+    el.addEventListener('click', playBlockSound);
+  });
+
+  /* ========== MINING SPARKS ON CLICK ========== */
+  document.addEventListener('click', (e) => {
+    // Don't spark on interactive elements that have their own effects
+    if (e.target.closest('.rsvp-btn, .sound-toggle')) return;
+    spawnSparks(e.clientX, e.clientY);
+  });
+
+  function spawnSparks(x, y) {
+    const colors = ['#FFF176', '#FFC107', '#FF9800', '#fff', '#76FF03'];
+    for (let i = 0; i < 8; i++) {
+      const spark = document.createElement('div');
+      spark.className = 'spark';
+      spark.style.left = x + 'px';
+      spark.style.top = y + 'px';
+      spark.style.background = colors[Math.floor(Math.random() * colors.length)];
+      document.body.appendChild(spark);
+
+      const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
+      const dist = 30 + Math.random() * 40;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 20;
+
+      spark.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 }
+      ], {
+        duration: 500 + Math.random() * 300,
+        easing: 'cubic-bezier(.3,.7,.4,1)'
+      }).onfinish = () => spark.remove();
+    }
+  }
+
+  /* ========== CONFETTI BURST ON RSVP HOVER (pixel blocks) ========== */
+  const rsvpBtn = document.querySelector('.rsvp-btn');
+  if (rsvpBtn) {
+    let lastBurst = 0;
+    rsvpBtn.addEventListener('mouseenter', () => {
+      const now = Date.now();
+      if (now - lastBurst < 800) return;
+      lastBurst = now;
+      burstConfetti(rsvpBtn);
+    });
+  }
+
+  function burstConfetti(anchor) {
+    const rect = anchor.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#FFC107', '#25D366', '#E8442E', '#29B6F6', '#FFF176', '#76FF03'];
+
+    for (let i = 0; i < 18; i++) {
+      const bit = document.createElement('div');
+      bit.style.cssText = `
+        position: fixed;
+        left: ${cx}px; top: ${cy}px;
+        width: 8px; height: 8px;
+        background: ${colors[i % colors.length]};
+        border: 1px solid #000;
+        pointer-events: none;
+        z-index: 200;
+      `;
+      document.body.appendChild(bit);
+
+      const angle = (Math.PI * 2 * i) / 18;
+      const dist = 60 + Math.random() * 80;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 40;
+
+      bit.animate([
+        { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.5) rotate(360deg)`, opacity: 0 }
+      ], {
+        duration: 900 + Math.random() * 400,
+        easing: 'cubic-bezier(.3,.7,.4,1)'
+      }).onfinish = () => bit.remove();
+    }
+  }
+
+  /* ========== PAUSE AUDIO WHEN TAB HIDDEN ========== */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && soundtrackPlaying) {
+      stopSoundtrack();
+      soundtrackStarted = false;
+    }
+  });
+</script>
+
+</body>
+</html>
