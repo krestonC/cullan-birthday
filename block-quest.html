@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Cullan-Rayne's Block Quest</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4BB04B">
+<meta name="description" content="Cullan-Rayne's Minecraft-style birthday adventure">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Block Quest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -601,6 +611,50 @@
     to   { opacity: 1; }
   }
 
+  /* ========== INSTALL-APP PROMPT ========== */
+  #installBtn {
+    display: none;
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 200;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, #FFEB3B, #FFC107);
+    color: #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    border: 3px solid #000;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+    cursor: pointer;
+    animation: installPulse 1.5s ease-in-out infinite alternate;
+  }
+  #installBtn.show { display: block; }
+  @keyframes installPulse {
+    from { transform: scale(1); filter: brightness(1); }
+    to   { transform: scale(1.06); filter: brightness(1.2); }
+  }
+  #iosInstallHint {
+    display: none;
+    position: fixed;
+    bottom: 20px; left: 20px; right: 20px;
+    z-index: 200;
+    padding: 14px;
+    background: #000;
+    color: #fff;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    text-align: center;
+    border: 3px solid #FFEB3B;
+    border-radius: 6px;
+  }
+  #iosInstallHint.show { display: block; }
+  #iosInstallHint .close {
+    position: absolute;
+    top: 4px; right: 8px;
+    color: #FFC107;
+    cursor: pointer;
+    font-size: 20px;
+  }
+
   /* ========== RESPONSIVE ========== */
   @media (max-width: 420px) {
     #hotbar { bottom: 110px; gap: 3px; padding: 4px; }
@@ -618,6 +672,14 @@
 </head>
 
 <body>
+
+<!-- INSTALL APP PROMPT -->
+<button id="installBtn" title="Add Block Quest to your home screen">📱 INSTALL APP</button>
+<div id="iosInstallHint">
+  <span class="close" id="iosHintClose">✕</span>
+  📱 To add Block Quest to your home screen:<br>
+  Tap the <b>Share</b> button below, then <b>Add to Home Screen</b>
+</div>
 
 <!-- START SCREEN -->
 <div id="start-screen">
