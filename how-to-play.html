@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Play Cullan's Block Quest</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4BB04B">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: #4B91D6;
+    font-family: 'VT323', monospace;
+    color: #fff;
+    line-height: 1.4;
+    -webkit-font-smoothing: none;
+    image-rendering: pixelated;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 20px 16px 80px;
+    background:
+      linear-gradient(180deg, #4B91D6 0%, #87CEEB 35%, #F4C27A 70%, #5C3317 100%);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Floating pixel clouds */
+  .cloud {
+    position: fixed;
+    background: #fff;
+    box-shadow: 8px 0 0 #fff, 16px 0 0 #fff, 24px 0 0 #fff, 32px 0 0 #fff,
+                8px -8px 0 #fff, 16px -8px 0 #fff, 24px -8px 0 #fff;
+    width: 8px; height: 8px;
+    opacity: 0.85;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .cloud:nth-child(1) { top: 60px; left: 10%; }
+  .cloud:nth-child(2) { top: 140px; right: 8%; transform: scale(0.7); }
+  .cloud:nth-child(3) { top: 40px; left: 60%; transform: scale(1.2); }
+
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    color: #FFEB3B;
+    text-shadow: 4px 4px 0 #000, 0 0 20px rgba(255, 235, 59, 0.5);
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #FFC107;
+    text-shadow: 2px 2px 0 #000;
+    text-align: center;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+  }
+
+  .play-now {
+    display: block;
+    max-width: 320px;
+    margin: 0 auto 30px;
+    padding: 14px;
+    background: linear-gradient(180deg, #4BB04B, #2E7D32);
+    border: 4px solid #000;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.6);
+    text-align: center;
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .play-now:hover, .play-now:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.6);
+  }
+
+  .section {
+    background: rgba(0, 0, 0, 0.7);
+    border: 4px solid #000;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .section h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, #8B5A2B, #6F4518);
+    border-bottom: 3px solid #000;
+    color: #FFEB3B;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1px;
+  }
+
+  .section.grass h2 { background: linear-gradient(180deg, #57BF57, #4BB04B); color: #fff; }
+  .section.lava h2 { background: linear-gradient(180deg, #FF5722, #D32F2F); color: #FFEB3B; }
+  .section.gold h2 { background: linear-gradient(180deg, #FFEB3B, #FFC107); color: #000; text-shadow: 1px 1px 0 #fff; }
+  .section.sky h2 { background: linear-gradient(180deg, #4B91D6, #2196F3); color: #fff; }
+
+  .section-body {
+    padding: 16px 18px;
+    font-size: 20px;
+  }
+
+  .section-body p {
+    margin-bottom: 10px;
+  }
+
+  .section-body ul, .section-body ol {
+    list-style: none;
+    padding: 0;
+  }
+  .section-body li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px dashed rgba(255,255,255,0.15);
+  }
+  .section-body li:last-child { border-bottom: none; }
+  .section-body li::before {
+    content: '▸';
+    position: absolute;
+    left: 8px;
+    color: #FFC107;
+    font-size: 18px;
+  }
+
+  .section-body li.numbered {
+    padding-left: 44px;
+    counter-increment: step;
+  }
+  .section-body ol { counter-reset: step; }
+  .section-body ol li::before {
+    content: counter(step);
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    background: #FFC107;
+    color: #000;
+    border: 2px solid #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    line-height: 24px;
+    text-align: center;
+  }
+
+  .key {
+    display: inline-block;
+    padding: 3px 10px;
+    background: linear-gradient(180deg, #E0E0E0, #9E9E9E);
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 3px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    text-shadow: none;
+    min-width: 20px;
+    text-align: center;
+    vertical-align: middle;
+    margin: 0 2px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+  }
+
+  .mbtn {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: 2px solid #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+  .mbtn.ssj { background: linear-gradient(180deg, #FFEB3B, #FFC107); color: #000; text-shadow: 1px 1px 0 #fff; }
+  .mbtn.fly { background: rgba(33,150,243,0.85); }
+  .mbtn.tnt { background: rgba(211,47,47,0.85); }
+  .mbtn.place { background: rgba(75,176,75,0.85); }
+  .mbtn.mine { background: rgba(232,68,46,0.85); }
+
+  .warning {
+    background: rgba(211, 47, 47, 0.9);
+    border: 3px solid #FFEB3B;
+    padding: 14px;
+    margin: 14px 0;
+    font-size: 18px;
+  }
+
+  .tip {
+    background: rgba(75, 176, 75, 0.8);
+    border-left: 6px solid #FFC107;
+    padding: 12px 14px;
+    margin: 10px 0;
+    font-size: 18px;
+  }
+
+  .platform {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .platform > div {
+    flex: 1;
+    min-width: 240px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid #000;
+    padding: 12px;
+  }
+  .platform h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #FFC107;
+    text-shadow: 1px 1px 0 #000;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #FFC107;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px 0;
+    font-size: 18px;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 20px; }
+    .subtitle { font-size: 9px; }
+    .section h2 { font-size: 12px; padding: 10px 12px; }
+    .section-body { padding: 14px; font-size: 18px; }
+    .warning, .tip { font-size: 17px; padding: 12px; }
+    .play-now { font-size: 12px; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cloud"></div>
+<div class="cloud"></div>
+<div class="cloud"></div>
+
+<main>
+
+<h1>CULLAN'S<br>BLOCK QUEST</h1>
+<div class="subtitle">✦ HOW TO PLAY ✦</div>
+
+<a class="play-now" href="/block-quest.html">▶ START THE GAME</a>
+
+<div class="section grass">
+  <h2>🎯 THE GOAL</h2>
+  <div class="section-body">
+    <p>Chop trees → Make planks → Craft pickaxes → Dig deeper → Find diamonds → Craft a <b>Diamond Pickaxe</b> to win!</p>
+    <p>A gold banner at the top of the screen tells Cullan exactly what to do next, at every step.</p>
+  </div>
+</div>
+
+<div class="section gold">
+  <h2>📱 ADD TO HOME SCREEN</h2>
+  <div class="section-body">
+    <p>Installs like a real app — icon on the home screen, runs full-screen, works without internet.</p>
+    <div class="platform">
+      <div>
+        <h3>Android / Chrome</h3>
+        <ol>
+          <li class="numbered">Open the game link in Chrome</li>
+          <li class="numbered">Wait a few seconds — a glowing yellow <b>📱 INSTALL APP</b> button appears top-right</li>
+          <li class="numbered">Tap it → "Add to home screen" → Install</li>
+        </ol>
+      </div>
+      <div>
+        <h3>iPhone / Safari</h3>
+        <ol>
+          <li class="numbered">Open the game link in Safari</li>
+          <li class="numbered">Tap the <b>Share</b> button (square with up arrow) at the bottom</li>
+          <li class="numbered">Scroll and tap <b>Add to Home Screen</b> → Add</li>
+        </ol>
+      </div>
+    </div>
+    <div class="tip">After install, look for a green grass-block icon labelled "Block Quest" on the home screen. Tap once to launch full-screen.</div>
+  </div>
+</div>
+
+<div class="section sky">
+  <h2>🕹️ CONTROLS — ON A PHONE</h2>
+  <div class="section-body">
+    <p>D-pad in the bottom-left. Action buttons in the bottom-right.</p>
+    <ul>
+      <li><b>◄ ► ⏶ ▼</b> — move, jump, crouch</li>
+      <li><span class="mbtn mine">⛏️</span> Mine the block in front of you. Or tap any block on the screen to mine it.</li>
+      <li><span class="mbtn place">🟩</span> <b>Tap ONCE</b> to "arm" place mode (button glows yellow), then <b>tap where you want the block</b>. Auto-disarms after 4 seconds.</li>
+      <li><span class="mbtn">SWAP</span> cycle through blocks in the hotbar</li>
+      <li><span class="mbtn">CRAFT</span> open the crafting menu</li>
+      <li><span class="mbtn ssj">⚡SSJ</span> become Super Saiyan (required to fly)</li>
+      <li><span class="mbtn fly">✈</span> toggle flight (only while Super Saiyan)</li>
+      <li><span class="mbtn tnt">💣</span> throw TNT in the direction you're facing</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section sky">
+  <h2>⌨️ CONTROLS — ON A COMPUTER</h2>
+  <div class="section-body">
+    <ul>
+      <li><span class="key">A</span> <span class="key">D</span> or <span class="key">←</span> <span class="key">→</span> — move left/right</li>
+      <li><span class="key">Space</span> or <span class="key">W</span> — jump</li>
+      <li><b>Left-click</b> any block within reach to mine it</li>
+      <li><b>Right-click</b> to place the selected block</li>
+      <li><span class="key">G</span> — go Super Saiyan (required to fly!)</li>
+      <li><span class="key">F</span> — toggle flight (while Super Saiyan, then <span class="key">W</span>/<span class="key">S</span> fly up/down)</li>
+      <li><span class="key">Q</span> — throw TNT</li>
+      <li><span class="key">C</span> — open crafting</li>
+      <li><span class="key">1</span>–<span class="key">7</span> — switch hotbar slot</li>
+      <li><span class="key">R</span> — respawn after dying</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section gold">
+  <h2>⚡ SUPER SAIYAN CULLY</h2>
+  <div class="section-body">
+    <p>Press <span class="key">G</span> (or tap <span class="mbtn ssj">⚡SSJ</span>) to transform into Super Saiyan. A golden flash covers the screen and "<b>CULLY SUPER SAIYAN!!!!</b>" rolls across in big letters.</p>
+    <p><b>While Super Saiyan:</b></p>
+    <ul>
+      <li>Hair turns bright yellow and spiky ⚡</li>
+      <li>Glowing yellow aura follows Cully around</li>
+      <li><b>Flight is unlocked</b> — press <span class="key">F</span> (desktop) or <span class="mbtn fly">✈</span> (phone) then W/S or ⏶/▼ to fly up/down</li>
+      <li>Mines blocks <b>2× faster</b></li>
+      <li>Immune to lava and freezing</li>
+      <li>Jumps 40% higher when not flying</li>
+    </ul>
+    <p>Press <span class="key">G</span> (or tap <span class="mbtn ssj">⚡SSJ</span>) again to turn it off.</p>
+  </div>
+</div>
+
+<div class="section lava">
+  <h2>💣 TNT — BLOW STUFF UP</h2>
+  <div class="section-body">
+    <p>Press <span class="key">Q</span> (or tap <span class="mbtn tnt">💣</span>) to throw a stick of TNT in the direction you're facing. It arcs through the air, lands, fuses for 1–2 seconds, then <b>BOOM!</b></p>
+    <ul>
+      <li>Destroys any block in a 3-block radius (except bedrock)</li>
+      <li>Kills any zombie or creeper in the blast</li>
+      <li><b>Does NOT hurt Cully</b> — you can stand right on top of it!</li>
+      <li>Knocks Cully back for a fun ragdoll launch</li>
+    </ul>
+    <div class="tip">Cully has unlimited TNT. Spam it freely to clear tunnels, destroy zombies, or just for fireworks.</div>
+  </div>
+</div>
+
+<div class="section grass">
+  <h2>🏗️ BUILDING — UNLIMITED BLOCKS</h2>
+  <div class="section-body">
+    <p>The first time Cully mines any block type (wood, stone, dirt, glass, leaves, planks, TNT) the inventory jumps to <b>999 (∞)</b> of that block <b>forever</b>.</p>
+    <p>Placing blocks <b>never uses them up</b>. Build castles, towers, tunnels, floors — whatever, as much as he wants. The only way to place is:</p>
+    <ul>
+      <li><b>Desktop:</b> right-click anywhere within reach</li>
+      <li><b>Phone:</b> tap <span class="mbtn place">🟩</span> (it glows yellow) then tap the spot on the screen</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section lava">
+  <h2>⚠️ WARNINGS — WHAT CAN KILL YOU</h2>
+  <div class="section-body">
+    <div class="warning">
+      🔥 <b>LAVA zone (very deep)</b> — past row 54 you start to burn. Touching an actual lava block does huge damage. Being Super Saiyan makes Cully immune to both.
+    </div>
+    <div class="warning">
+      ❄️ <b>FREEZING (very high)</b> — near the top of the world it's too cold and you lose hearts slowly. Super Saiyan is immune.
+    </div>
+    <div class="warning">
+      🧟 <b>ZOMBIES and CREEPERS</b> at night. They chase you and deal 2–3 damage per hit. Best responses: <b>fly away</b> (Super Saiyan + F) or <b>blow them up with TNT</b>.
+    </div>
+    <p>If Cully dies, press <span class="key">R</span> on desktop or tap <b>RESPAWN</b> on the death screen on phone — he comes back at spawn with full hearts.</p>
+  </div>
+</div>
+
+<div class="section grass">
+  <h2>👨‍👩‍👦 FOR PARENTS</h2>
+  <div class="section-body">
+    <ul>
+      <li><b>No downloads, no accounts, no ads.</b> Opens in any web browser, installs as an app in one tap.</li>
+      <li><b>Offline-capable.</b> Once opened once, the game works without wi-fi or data.</li>
+      <li><b>No chat, no multiplayer, no external links.</b> It's a single-player sandbox — totally self-contained.</li>
+      <li><b>Save-safe.</b> Progress is saved automatically on the device every few seconds. CONTINUE picks up where he left off; START QUEST begins a fresh world.</li>
+      <li><b>Kid-safe difficulty.</b> TNT never hurts the player; Super Saiyan mode makes hazards non-lethal; unlimited blocks remove the grind.</li>
+      <li>No installation is needed — it's just a bookmark. If you prefer no home-screen icon, just open the link in a browser.</li>
+    </ul>
+  </div>
+</div>
+
+<a class="play-now" href="/block-quest.html">▶ START THE GAME</a>
+
+<footer>
+  Built with love for Cullan-Rayne's 7th birthday 🎂<br>
+  <span style="opacity: 0.6; font-size: 14px;">cullan-birthday.vercel.app</span>
+</footer>
+
+</main>
+
+<script>
+  // PWA: allow this page to install the app too
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
