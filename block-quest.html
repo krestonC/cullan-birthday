@@ -259,9 +259,9 @@
 
   .action-buttons {
     display: grid;
-    grid-template-columns: repeat(3, 56px);
-    grid-template-rows: 56px 56px;
-    gap: 6px;
+    grid-template-columns: repeat(4, 52px);
+    grid-template-rows: 52px 52px;
+    gap: 5px;
     pointer-events: auto;
   }
 
@@ -293,6 +293,12 @@
   .ctrl-btn.fly { background: rgba(33, 150, 243, 0.55); font-size: 22px; }
   .ctrl-btn.fly.active { background: rgba(255, 235, 59, 0.7); box-shadow: inset 0 0 0 2px #fff, 0 0 8px #FFC107; }
   .ctrl-btn.tnt { background: rgba(211, 47, 47, 0.6); font-size: 20px; }
+  .ctrl-btn.ssj { background: linear-gradient(180deg, #FFEB3B, #FFC107); color: #000; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #fff; }
+  .ctrl-btn.ssj.active { box-shadow: inset 0 0 0 2px #fff, 0 0 16px #FFEB3B, 0 0 24px #FF9800; animation: ssjBtnPulse 0.6s ease-in-out infinite alternate; }
+  @keyframes ssjBtnPulse {
+    from { filter: brightness(1); }
+    to   { filter: brightness(1.3); }
+  }
   .ctrl-btn.place.armed { background: rgba(255, 235, 59, 0.85); box-shadow: inset 0 0 0 2px #fff, 0 0 10px #FFC107; }
 
   /* ========== MENUS ========== */
@@ -529,13 +535,79 @@
     }
   }
 
+  /* ========== SUPER SAIYAN FX ========== */
+  #ssj-flash {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #FFEB3B 0%, #FFC107 40%, rgba(255,152,0,0.5) 70%, transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1500;
+    mix-blend-mode: screen;
+  }
+  #ssj-flash.active { animation: ssjFlash 2.4s ease-out; }
+  @keyframes ssjFlash {
+    0%   { opacity: 0; transform: scale(0.1); }
+    8%   { opacity: 1; transform: scale(1.2); }
+    15%  { opacity: 0.95; transform: scale(1); }
+    40%  { opacity: 0.6; }
+    70%  { opacity: 0.35; }
+    100% { opacity: 0; transform: scale(1.4); }
+  }
+
+  #ssj-banner {
+    position: fixed;
+    top: 38%;
+    left: 0; right: 0;
+    text-align: center;
+    pointer-events: none;
+    z-index: 1501;
+    opacity: 0;
+  }
+  #ssj-banner.active { animation: ssjBanner 2.4s ease-out; }
+  .ssj-text {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 36px;
+    color: #FFEB3B;
+    text-shadow:
+      0 0 10px #FFF59D,
+      0 0 20px #FFC107,
+      0 0 40px #FF9800,
+      0 0 60px #FF5722,
+      4px 4px 0 #000;
+    letter-spacing: 4px;
+    white-space: nowrap;
+  }
+  @keyframes ssjBanner {
+    0%   { transform: translateX(110vw) scale(0.4) rotate(-8deg); opacity: 0; }
+    15%  { transform: translateX(0) scale(1.3) rotate(2deg); opacity: 1; }
+    25%  { transform: translateX(0) scale(1) rotate(0deg); opacity: 1; }
+    70%  { transform: translateX(0) scale(1.05) rotate(0deg); opacity: 1; }
+    100% { transform: translateX(-110vw) scale(1.4) rotate(8deg); opacity: 0; }
+  }
+  @media (max-width: 500px) { .ssj-text { font-size: 22px; letter-spacing: 2px; } }
+
+  /* SSJ aura pulses around player (drawn in JS, but this provides screen tint) */
+  body.ssj-active::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(255, 193, 7, 0.18) 100%);
+    pointer-events: none;
+    z-index: 12;
+    animation: ssjPulse 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes ssjPulse {
+    from { opacity: 0.5; }
+    to   { opacity: 1; }
+  }
+
   /* ========== RESPONSIVE ========== */
   @media (max-width: 420px) {
     #hotbar { bottom: 110px; gap: 3px; padding: 4px; }
     .hotbar-slot { width: 36px; height: 36px; }
     .hotbar-slot .block-icon { width: 22px; height: 22px; }
     .d-pad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(2, 42px); }
-    .action-buttons { grid-template-columns: repeat(3, 46px); grid-template-rows: 46px 46px; }
+    .action-buttons { grid-template-columns: repeat(4, 42px); grid-template-rows: 42px 42px; }
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -559,9 +631,10 @@
 
   <div class="instructions">
     <b>DESKTOP</b> - Move: A/D &nbsp; Jump: SPACE/W &nbsp; Mine: LEFT-CLICK &nbsp; Place: RIGHT-CLICK<br>
-    Fly: <b>F</b> toggle, W/S up-down &nbsp; TNT: <b>Q</b> throw &nbsp; Respawn: <b>R</b> &nbsp; Craft: <b>C</b><br>
-    <b>MOBILE</b> - D-pad to move, <b>⏶</b> jump, <b>⛏️</b> mine in front (or tap any block)<br>
-    <b>🟩</b> = arm place then tap where to put block &nbsp; <b>✈</b> toggle fly &nbsp; <b>💣</b> throw TNT
+    <b>⚡ G</b> = go SUPER SAIYAN! (required to fly) &nbsp; <b>F</b> = toggle fly &nbsp; <b>Q</b> = throw TNT<br>
+    <b>R</b> respawn &nbsp; <b>C</b> craft &nbsp; <b>1-7</b> switch blocks<br>
+    <b>MOBILE</b> - D-pad to move, <b>⏶</b> jump, <b>⛏️</b> mine, <b>🟩</b> arm-then-tap to place<br>
+    Tap <b>⚡SSJ</b> to transform, then <b>✈</b> to fly, <b>💣</b> to throw TNT
   </div>
 </div>
 
@@ -592,6 +665,10 @@
 <!-- HOTBAR -->
 <div id="hotbar"></div>
 
+<!-- SUPER SAIYAN FX OVERLAYS -->
+<div id="ssj-flash"></div>
+<div id="ssj-banner"><div class="ssj-text">CULLY SUPER SAIYAN!!!!</div></div>
+
 <!-- MOBILE CONTROLS -->
 <div id="mobile-controls">
   <div class="d-pad">
@@ -606,9 +683,11 @@
     <div class="ctrl-btn switch" data-ctrl="switch">SWAP</div>
     <div class="ctrl-btn craft" data-ctrl="craft">CRAFT</div>
     <div class="ctrl-btn fly" data-ctrl="fly">✈</div>
+    <div class="ctrl-btn ssj" data-ctrl="ssj">⚡SSJ</div>
     <div class="ctrl-btn break" data-ctrl="break">⛏️</div>
     <div class="ctrl-btn place" data-ctrl="place">🟩</div>
     <div class="ctrl-btn tnt" data-ctrl="tnt">💣</div>
+    <div></div>
   </div>
 </div>
 
@@ -938,6 +1017,8 @@ class Player {
     this.flying = false;
     this.lavaTick = 0;
     this.freezeTick = 0;
+    this.superSaiyan = false;
+    this.ssjAuraTick = 0;
   }
 
   get tileX() { return Math.floor((this.x + this.width / 2) / BLOCK); }
@@ -974,6 +1055,60 @@ class Mob {
     this.aiTimer = 0;
     this.attackCooldown = 0;
   }
+}
+
+// ==================== SUPER SAIYAN ====================
+function activateSuperSaiyan() {
+  const p = state.player;
+  if (!p || p.superSaiyan || state.dead) return;
+  p.superSaiyan = true;
+  p.invuln = 60;
+  const flash = document.getElementById('ssj-flash');
+  const banner = document.getElementById('ssj-banner');
+  if (flash) { flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active'); }
+  if (banner) { banner.classList.remove('active'); void banner.offsetWidth; banner.classList.add('active'); }
+  setTimeout(() => {
+    if (flash) flash.classList.remove('active');
+    if (banner) banner.classList.remove('active');
+  }, 2500);
+  document.body.classList.add('ssj-active');
+  const btn = document.querySelector('[data-ctrl="ssj"]');
+  if (btn) btn.classList.add('active');
+  // Yellow aura burst
+  for (let i = 0; i < 60; i++) {
+    const ang = (i / 60) * Math.PI * 2;
+    state.particles.push({
+      x: p.x + p.width / 2 + Math.cos(ang) * 4,
+      y: p.y + p.height / 2 + Math.sin(ang) * 4,
+      vx: Math.cos(ang) * 4,
+      vy: Math.sin(ang) * 4,
+      color: i % 2 ? '#FFEB3B' : '#FFC107',
+      size: 4,
+      life: 40,
+    });
+  }
+  showHintOnce('ssj_on', 'SUPER SAIYAN! Press FLY to soar!');
+}
+
+function deactivateSuperSaiyan() {
+  const p = state.player;
+  if (!p || !p.superSaiyan) return;
+  p.superSaiyan = false;
+  p.flying = false;
+  p.vy = 0;
+  document.body.classList.remove('ssj-active');
+  const btn = document.querySelector('[data-ctrl="ssj"]');
+  if (btn) btn.classList.remove('active');
+  const flyBtn = document.querySelector('[data-ctrl="fly"]');
+  if (flyBtn) flyBtn.classList.remove('active');
+  showHint('Back to normal');
+}
+
+function toggleSuperSaiyan() {
+  const p = state.player;
+  if (!p) return;
+  if (p.superSaiyan) deactivateSuperSaiyan();
+  else activateSuperSaiyan();
 }
 
 // ==================== TNT / EXPLOSIVES ====================
@@ -1895,6 +2030,35 @@ function drawPlayer(ctx, p) {
   const x = p.x, y = p.y;
   const w = p.width, h = p.height;
 
+  // Super Saiyan aura — pulsing yellow halo around player
+  if (p.superSaiyan) {
+    p.ssjAuraTick = (p.ssjAuraTick || 0) + 1;
+    const pulse = Math.sin(p.ssjAuraTick * 0.15) * 0.2 + 1;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    const grd = ctx.createRadialGradient(x + w/2, y + h/2, 6, x + w/2, y + h/2, w * 1.6 * pulse);
+    grd.addColorStop(0, 'rgba(255,235,59,0.9)');
+    grd.addColorStop(0.5, 'rgba(255,193,7,0.5)');
+    grd.addColorStop(1, 'rgba(255,152,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x - w, y - h, w * 3, h * 3);
+    ctx.globalAlpha = 1;
+    if (p.ssjAuraTick % 4 === 0) {
+      for (let i = 0; i < 3; i++) {
+        state.particles.push({
+          x: x + w/2 + (Math.random() - 0.5) * w * 1.2,
+          y: y + h + Math.random() * 8,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -2 - Math.random() * 3,
+          color: Math.random() < 0.5 ? '#FFEB3B' : '#FFF59D',
+          size: 3,
+          life: 20,
+        });
+      }
+    }
+    ctx.restore();
+  }
+
   // Legs
   ctx.fillStyle = '#4A3A8A';
   ctx.fillRect(x + w * 0.15, y + h * 0.65, w * 0.3, h * 0.35);
@@ -1913,9 +2077,20 @@ function drawPlayer(ctx, p) {
   ctx.fillStyle = '#D2A679';
   ctx.fillRect(x + w * 0.15, y, w * 0.7, h * 0.35);
 
-  // Hair
-  ctx.fillStyle = '#3D2817';
+  // Hair — blond + spiky when Super Saiyan
+  ctx.fillStyle = p.superSaiyan ? '#FFEB3B' : '#3D2817';
   ctx.fillRect(x + w * 0.15, y, w * 0.7, h * 0.1);
+  if (p.superSaiyan) {
+    // Extra spikes pointing up
+    ctx.fillStyle = '#FFC107';
+    ctx.fillRect(x + w * 0.22, y - h * 0.08, w * 0.12, h * 0.1);
+    ctx.fillRect(x + w * 0.44, y - h * 0.14, w * 0.12, h * 0.14);
+    ctx.fillRect(x + w * 0.66, y - h * 0.08, w * 0.12, h * 0.1);
+    ctx.fillStyle = '#FFEB3B';
+    ctx.fillRect(x + w * 0.24, y - h * 0.06, w * 0.08, h * 0.08);
+    ctx.fillRect(x + w * 0.46, y - h * 0.11, w * 0.08, h * 0.11);
+    ctx.fillRect(x + w * 0.68, y - h * 0.06, w * 0.08, h * 0.08);
+  }
 
   // Eyes
   ctx.fillStyle = '#fff';
@@ -2130,15 +2305,20 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'f' || e.key === 'F') {
     const p = state.player;
     if (p) {
-      p.flying = !p.flying;
-      showHint(p.flying ? 'FLYING - W/S or Space/Down to fly up/down' : 'LANDED');
-      if (!p.flying) p.vy = 0;
-      const el = document.querySelector('[data-ctrl="fly"]');
-      if (el) el.classList.toggle('active', p.flying);
+      if (!p.superSaiyan) {
+        showHint('GO SUPER SAIYAN FIRST! Press G (or tap the yellow ⚡SSJ button)');
+      } else {
+        p.flying = !p.flying;
+        showHint(p.flying ? 'FLYING! W/S or Space/Down to fly up/down' : 'LANDED');
+        if (!p.flying) p.vy = 0;
+        const el = document.querySelector('[data-ctrl="fly"]');
+        if (el) el.classList.toggle('active', p.flying);
+      }
     }
     e.preventDefault();
   }
   if (e.key === 'q' || e.key === 'Q') { throwTNT(); e.preventDefault(); }
+  if (e.key === 'g' || e.key === 'G') { toggleSuperSaiyan(); e.preventDefault(); }
   if (e.key === 'r' || e.key === 'R') {
     if (state.dead) { respawnPlayer(); e.preventDefault(); }
   }
@@ -2258,8 +2438,12 @@ document.querySelector('[data-ctrl="place"]').addEventListener('mousedown', (e) 
 function toggleFlightBtn() {
   const p = state.player;
   if (!p) return;
+  if (!p.superSaiyan) {
+    showHint('Tap ⚡SSJ first to go Super Saiyan, then fly!');
+    return;
+  }
   p.flying = !p.flying;
-  showHint(p.flying ? 'FLYING - hold jump to go up, down-arrow to go down' : 'LANDED');
+  showHint(p.flying ? 'FLYING! hold ⏶ to go up, ▼ to go down' : 'LANDED');
   if (!p.flying) p.vy = 0;
   const el = document.querySelector('[data-ctrl="fly"]');
   if (el) el.classList.toggle('active', p.flying);
@@ -2269,6 +2453,9 @@ document.querySelector('[data-ctrl="fly"]').addEventListener('mousedown', (e) =>
 
 document.querySelector('[data-ctrl="tnt"]').addEventListener('touchstart', (e) => { e.preventDefault(); throwTNT(); });
 document.querySelector('[data-ctrl="tnt"]').addEventListener('mousedown', (e) => { e.preventDefault(); throwTNT(); });
+
+document.querySelector('[data-ctrl="ssj"]').addEventListener('touchstart', (e) => { e.preventDefault(); toggleSuperSaiyan(); });
+document.querySelector('[data-ctrl="ssj"]').addEventListener('mousedown', (e) => { e.preventDefault(); toggleSuperSaiyan(); });
 
 document.querySelector('[data-ctrl="switch"]').addEventListener('click', (e) => {
   e.preventDefault();
