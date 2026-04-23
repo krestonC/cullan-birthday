@@ -259,7 +259,7 @@
 
   .action-buttons {
     display: grid;
-    grid-template-columns: repeat(2, 56px);
+    grid-template-columns: repeat(3, 56px);
     grid-template-rows: 56px 56px;
     gap: 6px;
     pointer-events: auto;
@@ -290,6 +290,10 @@
   .ctrl-btn.place { background: rgba(75, 176, 75, 0.6); font-size: 20px; }
   .ctrl-btn.craft { font-size: 10px; }
   .ctrl-btn.switch { font-size: 10px; }
+  .ctrl-btn.fly { background: rgba(33, 150, 243, 0.55); font-size: 22px; }
+  .ctrl-btn.fly.active { background: rgba(255, 235, 59, 0.7); box-shadow: inset 0 0 0 2px #fff, 0 0 8px #FFC107; }
+  .ctrl-btn.tnt { background: rgba(211, 47, 47, 0.6); font-size: 20px; }
+  .ctrl-btn.place.armed { background: rgba(255, 235, 59, 0.85); box-shadow: inset 0 0 0 2px #fff, 0 0 10px #FFC107; }
 
   /* ========== MENUS ========== */
   #death-screen, #win-screen, #craft-menu, #pause-menu {
@@ -531,7 +535,7 @@
     .hotbar-slot { width: 36px; height: 36px; }
     .hotbar-slot .block-icon { width: 22px; height: 22px; }
     .d-pad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(2, 42px); }
-    .action-buttons { grid-template-columns: repeat(2, 50px); grid-template-rows: 50px 50px; }
+    .action-buttons { grid-template-columns: repeat(3, 46px); grid-template-rows: 46px 46px; }
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -554,10 +558,10 @@
   <button class="start-btn secondary" id="continueBtn" style="display:none;">CONTINUE</button>
 
   <div class="instructions">
-    <b>MOVE:</b> A/D &nbsp; <b>JUMP:</b> SPACE or W &nbsp; <b>MINE:</b> LEFT-CLICK &nbsp; <b>PLACE:</b> RIGHT-CLICK<br>
-    <b>FLY:</b> press <b>F</b> to toggle flight, then W/S to fly up/down<br>
-    <b>TNT:</b> press <b>Q</b> to throw a bomb (blows up zombies and blocks!)<br>
-    <b>R</b> to respawn if you die &nbsp; <b>C</b> for crafting &nbsp; <b>1-7</b> to switch blocks
+    <b>DESKTOP</b> - Move: A/D &nbsp; Jump: SPACE/W &nbsp; Mine: LEFT-CLICK &nbsp; Place: RIGHT-CLICK<br>
+    Fly: <b>F</b> toggle, W/S up-down &nbsp; TNT: <b>Q</b> throw &nbsp; Respawn: <b>R</b> &nbsp; Craft: <b>C</b><br>
+    <b>MOBILE</b> - D-pad to move, <b>⏶</b> jump, <b>⛏️</b> mine in front (or tap any block)<br>
+    <b>🟩</b> = arm place then tap where to put block &nbsp; <b>✈</b> toggle fly &nbsp; <b>💣</b> throw TNT
   </div>
 </div>
 
@@ -601,8 +605,10 @@
   <div class="action-buttons">
     <div class="ctrl-btn switch" data-ctrl="switch">SWAP</div>
     <div class="ctrl-btn craft" data-ctrl="craft">CRAFT</div>
+    <div class="ctrl-btn fly" data-ctrl="fly">✈</div>
     <div class="ctrl-btn break" data-ctrl="break">⛏️</div>
     <div class="ctrl-btn place" data-ctrl="place">🟩</div>
+    <div class="ctrl-btn tnt" data-ctrl="tnt">💣</div>
   </div>
 </div>
 
@@ -1088,6 +1094,7 @@ const state = {
   keys: {},
   mouse: { x: 0, y: 0, down: false, rightDown: false, onCanvas: false },
   breaking: null,      // { tx, ty, progress }
+  placeMode: 0,
   time: 0,             // world ticks
   day: 1,
   isNight: false,
@@ -1489,6 +1496,14 @@ function update() {
 
   updateTNTs();
 
+  if (state.placeMode > 0) {
+    state.placeMode--;
+    if (state.placeMode === 0) {
+      const el = document.querySelector('[data-ctrl="place"]');
+      if (el) el.classList.remove('armed');
+    }
+  }
+
   // Update particles
   state.particles = state.particles.filter(pt => {
     pt.x += pt.vx;
@@ -1581,9 +1596,18 @@ function tryPlace() {
 
   let tx, ty;
   if (isMobile) {
-    const p = state.player;
-    tx = Math.floor((p.x + p.width / 2) / BLOCK) + p.facing;
-    ty = Math.floor((p.y + p.height / 2) / BLOCK);
+    if (state.mouse.x != null && state.mouse.y != null && state.mouse.onCanvas !== undefined) {
+      const canvas = document.getElementById('game-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const worldX = state.mouse.x * (canvas.width / rect.width) + state.camera.x;
+      const worldY = state.mouse.y * (canvas.height / rect.height) + state.camera.y;
+      tx = Math.floor(worldX / BLOCK);
+      ty = Math.floor(worldY / BLOCK);
+    } else {
+      const p = state.player;
+      tx = Math.floor((p.x + p.width / 2) / BLOCK) + p.facing;
+      ty = Math.floor((p.y + p.height / 2) / BLOCK);
+    }
   } else {
     const canvas = document.getElementById('game-canvas');
     const rect = canvas.getBoundingClientRect();
@@ -2109,6 +2133,8 @@ document.addEventListener('keydown', (e) => {
       p.flying = !p.flying;
       showHint(p.flying ? 'FLYING - W/S or Space/Down to fly up/down' : 'LANDED');
       if (!p.flying) p.vy = 0;
+      const el = document.querySelector('[data-ctrl="fly"]');
+      if (el) el.classList.toggle('active', p.flying);
     }
     e.preventDefault();
   }
@@ -2169,6 +2195,13 @@ canvas.addEventListener('touchstart', (e) => {
   const rect = canvas.getBoundingClientRect();
   state.mouse.x = t.clientX - rect.left;
   state.mouse.y = t.clientY - rect.top;
+  if (state.placeMode > 0) {
+    tryPlace();
+    state.placeMode = 0;
+    const el = document.querySelector('[data-ctrl="place"]');
+    if (el) el.classList.remove('armed');
+    return;
+  }
   state.mouse.down = true;
 }, { passive: false });
 canvas.addEventListener('touchmove', (e) => {
@@ -2207,14 +2240,35 @@ bindCtrl('[data-ctrl="jump"]',  () => state.keys.jump = true,  () => state.keys.
 bindCtrl('[data-ctrl="down"]',  () => state.keys.down = true,  () => state.keys.down = false);
 bindCtrl('[data-ctrl="break"]', () => state.keys.break = true, () => state.keys.break = false);
 
+function armPlaceMode() {
+  state.placeMode = 240;
+  const el = document.querySelector('[data-ctrl="place"]');
+  if (el) el.classList.add('armed');
+  showHintOnce('place_arm_hint', 'PLACE MODE - tap where you want the block');
+}
 document.querySelector('[data-ctrl="place"]').addEventListener('touchstart', (e) => {
   e.preventDefault();
-  tryPlace();
+  armPlaceMode();
 });
 document.querySelector('[data-ctrl="place"]').addEventListener('mousedown', (e) => {
   e.preventDefault();
-  tryPlace();
+  armPlaceMode();
 });
+
+function toggleFlightBtn() {
+  const p = state.player;
+  if (!p) return;
+  p.flying = !p.flying;
+  showHint(p.flying ? 'FLYING - hold jump to go up, down-arrow to go down' : 'LANDED');
+  if (!p.flying) p.vy = 0;
+  const el = document.querySelector('[data-ctrl="fly"]');
+  if (el) el.classList.toggle('active', p.flying);
+}
+document.querySelector('[data-ctrl="fly"]').addEventListener('touchstart', (e) => { e.preventDefault(); toggleFlightBtn(); });
+document.querySelector('[data-ctrl="fly"]').addEventListener('mousedown', (e) => { e.preventDefault(); toggleFlightBtn(); });
+
+document.querySelector('[data-ctrl="tnt"]').addEventListener('touchstart', (e) => { e.preventDefault(); throwTNT(); });
+document.querySelector('[data-ctrl="tnt"]').addEventListener('mousedown', (e) => { e.preventDefault(); throwTNT(); });
 
 document.querySelector('[data-ctrl="switch"]').addEventListener('click', (e) => {
   e.preventDefault();
