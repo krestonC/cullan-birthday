@@ -554,8 +554,10 @@
   <button class="start-btn secondary" id="continueBtn" style="display:none;">CONTINUE</button>
 
   <div class="instructions">
-    <b>DESKTOP:</b> A/D or ←/→ to move, SPACE or W to jump, LEFT-CLICK to mine, RIGHT-CLICK to place, 1-6 to switch blocks, C for crafting<br>
-    <b>MOBILE:</b> D-pad to move, ⏶ to jump, 🗡️ to mine, 🟩 to place, ⚒️ for crafting
+    <b>MOVE:</b> A/D &nbsp; <b>JUMP:</b> SPACE or W &nbsp; <b>MINE:</b> LEFT-CLICK &nbsp; <b>PLACE:</b> RIGHT-CLICK<br>
+    <b>FLY:</b> press <b>F</b> to toggle flight, then W/S to fly up/down<br>
+    <b>TNT:</b> press <b>Q</b> to throw a bomb (blows up zombies and blocks!)<br>
+    <b>R</b> to respawn if you die &nbsp; <b>C</b> for crafting &nbsp; <b>1-7</b> to switch blocks
   </div>
 </div>
 
@@ -658,6 +660,9 @@ const BLOCKS = {
   PLANKS:   { id: 11, name: 'Planks',   color: '#D2A679', solid: true,  minable: true, hardness: 1 },
   STONE_BRICK: { id: 12, name: 'Brick', color: '#9E9E9E', solid: true,  minable: true, hardness: 2 },
   GLASS:    { id: 13, name: 'Glass',    color: '#B3E5FC', solid: true,  minable: true, hardness: 0.5 },
+  LAVA:     { id: 14, name: 'Lava',     color: '#FF5722', solid: false, minable: false, deadly: true },
+  TNT:      { id: 15, name: 'TNT',      color: '#D32F2F', solid: true,  minable: true, hardness: 0.5 },
+  ICE:      { id: 16, name: 'Ice',      color: '#B3E5FC', solid: true,  minable: true, hardness: 0.5 },
 };
 
 const BLOCK_BY_ID = {};
@@ -851,6 +856,24 @@ function generateWorld() {
       else world[x][y] = BLOCKS.STONE.id;
     }
   }
+  for (let y = 0; y < WORLD_HEIGHT; y++) {
+    world[0][y] = BLOCKS.BEDROCK.id;
+    world[WORLD_WIDTH - 1][y] = BLOCKS.BEDROCK.id;
+  }
+  for (let x = 0; x < WORLD_WIDTH; x++) {
+    world[x][WORLD_HEIGHT - 1] = BLOCKS.BEDROCK.id;
+    world[x][WORLD_HEIGHT - 2] = BLOCKS.BEDROCK.id;
+  }
+  for (let x = 1; x < WORLD_WIDTH - 1; x++) {
+    for (let y = 55; y < WORLD_HEIGHT - 2; y++) {
+      if (world[x][y] === BLOCKS.STONE.id && Math.random() < 0.12) {
+        world[x][y] = BLOCKS.LAVA.id;
+      }
+    }
+  }
+  for (let x = 1; x < WORLD_WIDTH - 1; x++) {
+    if (Math.random() < 0.25) world[x][1] = BLOCKS.ICE.id;
+  }
 
   // Ore veins
   for (let x = 0; x < WORLD_WIDTH; x++) {
@@ -906,6 +929,9 @@ class Player {
     this.maxHp = 10;
     this.invuln = 0;
     this.name = 'Cullan';
+    this.flying = false;
+    this.lavaTick = 0;
+    this.freezeTick = 0;
   }
 
   get tileX() { return Math.floor((this.x + this.width / 2) / BLOCK); }
@@ -944,6 +970,109 @@ class Mob {
   }
 }
 
+// ==================== TNT / EXPLOSIVES ====================
+class TNT {
+  constructor(x, y, vx, vy) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.width = 18; this.height = 18;
+    this.fuse = 110;
+    this.blockType = 15;
+  }
+}
+
+function throwTNT() {
+  if (!state.player || state.dead || state.paused) return;
+  const p = state.player;
+  const facing = p.facing || 1;
+  const tnt = new TNT(
+    p.x + p.width / 2 + facing * 12,
+    p.y + p.height / 2 - 8,
+    facing * 7 + (p.vx || 0) * 0.3,
+    -6
+  );
+  state.tnts = state.tnts || [];
+  state.tnts.push(tnt);
+  showHintOnce('tnt_thrown', 'TNT thrown! Stand back!');
+}
+
+function explodeTNT(tnt) {
+  const cx = tnt.x + tnt.width / 2;
+  const cy = tnt.y + tnt.height / 2;
+  const ctx_ = Math.floor(cx / BLOCK);
+  const cty = Math.floor(cy / BLOCK);
+  const RADIUS = 3;
+  for (let dx = -RADIUS; dx <= RADIUS; dx++) {
+    for (let dy = -RADIUS; dy <= RADIUS; dy++) {
+      if (dx * dx + dy * dy > RADIUS * RADIUS) continue;
+      const tx = ctx_ + dx, ty = cty + dy;
+      if (tx < 1 || tx >= WORLD_WIDTH - 1 || ty < 0 || ty >= WORLD_HEIGHT - 2) continue;
+      const bt = state.world[tx][ty];
+      if (bt === 0) continue;
+      if (bt === BLOCKS.BEDROCK.id) continue;
+      state.world[tx][ty] = 0;
+      if (Math.random() < 0.4 && BLOCK_BY_ID[bt] && BLOCK_BY_ID[bt].minable) {
+        state.items.push(new ItemDrop(tx * BLOCK + BLOCK / 2 - 7, ty * BLOCK + 4, bt));
+      }
+    }
+  }
+  state.mobs = state.mobs.filter(m => {
+    const mx = m.x + m.width / 2, my = m.y + m.height / 2;
+    const d = Math.hypot(mx - cx, my - cy);
+    if (d < RADIUS * BLOCK) {
+      spawnParticles(mx, my, '#E8442E', 15);
+      return false;
+    }
+    return true;
+  });
+  const p = state.player;
+  if (p) {
+    const px = p.x + p.width / 2, py = p.y + p.height / 2;
+    const d = Math.hypot(px - cx, py - cy);
+    if (d < RADIUS * BLOCK && p.invuln <= 0) {
+      p.hp -= 2;
+      p.invuln = 30;
+      p.vx = Math.sign(px - cx) * 8;
+      p.vy = -7;
+      updateHearts();
+    }
+  }
+  for (let i = 0; i < 40; i++) {
+    spawnParticles(cx, cy, i % 2 ? '#FFC107' : '#FF5722', 1);
+  }
+  spawnParticles(cx, cy, '#fff', 20);
+}
+
+function updateTNTs() {
+  if (!state.tnts) state.tnts = [];
+  state.tnts = state.tnts.filter(tnt => {
+    tnt.vy += GRAVITY * 0.9;
+    if (tnt.vy > MAX_FALL) tnt.vy = MAX_FALL;
+    if (!collides(tnt.x + tnt.vx, tnt.y, tnt.width, tnt.height)) tnt.x += tnt.vx;
+    else tnt.vx = -tnt.vx * 0.4;
+    if (!collides(tnt.x, tnt.y + tnt.vy, tnt.width, tnt.height)) tnt.y += tnt.vy;
+    else { tnt.vy = -tnt.vy * 0.3; tnt.vx *= 0.7; }
+    tnt.fuse--;
+    if (tnt.fuse <= 0) { explodeTNT(tnt); return false; }
+    return true;
+  });
+}
+
+function respawnPlayer() {
+  if (!state.player) return;
+  const spawnX = Math.floor(WORLD_WIDTH / 2);
+  const spawnY = state.heights[spawnX] - 3;
+  state.player.x = spawnX * BLOCK;
+  state.player.y = spawnY * BLOCK;
+  state.player.hp = state.player.maxHp;
+  state.player.vx = 0; state.player.vy = 0;
+  state.player.flying = false;
+  state.player.invuln = 60;
+  state.dead = false;
+  document.getElementById('death-screen').classList.remove('show');
+  updateHearts();
+}
+
 // ==================== GAME STATE ====================
 const state = {
   world: null,
@@ -951,7 +1080,7 @@ const state = {
   player: null,
   camera: { x: 0, y: 0 },
   inventory: {},       // blockId -> count
-  hotbar: [BLOCKS.DIRT.id, BLOCKS.STONE.id, BLOCKS.WOOD.id, BLOCKS.PLANKS.id, BLOCKS.LEAVES.id, BLOCKS.GLASS.id],
+  hotbar: [BLOCKS.DIRT.id, BLOCKS.STONE.id, BLOCKS.WOOD.id, BLOCKS.PLANKS.id, BLOCKS.LEAVES.id, BLOCKS.GLASS.id, BLOCKS.TNT.id],
   selected: 0,
   items: [],           // dropped items
   mobs: [],
@@ -1148,6 +1277,7 @@ function initGame(fresh = false) {
   state.items = [];
   state.mobs = [];
   state.particles = [];
+  state.tnts = [];
   state.dead = false;
   state.won = false;
   state.paused = false;
@@ -1259,17 +1389,55 @@ function update() {
   p.vx = moveX;
   if (moveX !== 0) p.facing = moveX > 0 ? 1 : -1;
 
-  if (state.keys.jump && p.onGround) {
-    p.vy = JUMP_VELOCITY;
-    p.onGround = false;
+  if (p.flying) {
+    const FLY_SPEED = 6;
+    let vy = 0;
+    if (state.keys.jump) vy -= FLY_SPEED;
+    if (state.keys.down) vy += FLY_SPEED;
+    p.vy = vy;
+    p.vx = moveX * 1.15;
+  } else {
+    if (state.keys.jump && p.onGround) {
+      p.vy = JUMP_VELOCITY;
+      p.onGround = false;
+    }
+    p.vy += GRAVITY;
+    if (p.vy > MAX_FALL) p.vy = MAX_FALL;
   }
-
-  // Gravity
-  p.vy += GRAVITY;
-  if (p.vy > MAX_FALL) p.vy = MAX_FALL;
 
   moveEntity(p, p.vx, 0);
   moveEntity(p, 0, p.vy);
+
+  const pTy = Math.floor((p.y + p.height / 2) / BLOCK);
+  if (pTy >= 54) {
+    p.lavaTick++;
+    if (p.lavaTick >= 25 && p.invuln <= 0) {
+      p.lavaTick = 0; p.hp -= 1; p.invuln = 15;
+      spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#FF5722', 8);
+      showHintOnce('lava_zone', 'TOO DEEP! LAVA IS BURNING YOU!');
+      updateHearts();
+    }
+  } else { p.lavaTick = 0; }
+  if (pTy <= 3) {
+    p.freezeTick++;
+    if (p.freezeTick >= 40 && p.invuln <= 0) {
+      p.freezeTick = 0; p.hp -= 1; p.invuln = 15;
+      spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#B3E5FC', 8);
+      showHintOnce('freeze_zone', 'TOO HIGH! YOU ARE FREEZING!');
+      updateHearts();
+    }
+  } else { p.freezeTick = 0; }
+  const px_ = Math.floor((p.x + p.width / 2) / BLOCK);
+  const py_ = Math.floor((p.y + p.height / 2) / BLOCK);
+  if (px_ >= 0 && px_ < WORLD_WIDTH && py_ >= 0 && py_ < WORLD_HEIGHT) {
+    if (state.world[px_][py_] === BLOCKS.LAVA.id && p.invuln <= 0) {
+      p.hp -= 4; p.invuln = 30;
+      spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#FF5722', 20);
+      showHint('LAVA!');
+      updateHearts();
+    }
+  }
+  if (p.hp <= 0) p.hp = 0;
 
   // Invuln tick
   if (p.invuln > 0) p.invuln--;
@@ -1309,17 +1477,17 @@ function update() {
     return it.life > 0;
   });
 
-  // Mob spawning disabled for party mode (kids should be able to explore safely)
-  // state.mobSpawnTimer++;
-  // if (state.isNight && state.mobSpawnTimer > 240 && state.mobs.length < 4) {
-  //   state.mobSpawnTimer = 0;
-  //   spawnMob();
-  // }
-  // Clear any mobs that may have loaded from an older save
-  if (state.mobs.length > 0) state.mobs = [];
+  // Mob spawning (at night) — re-enabled because player can fly to safety
+  state.mobSpawnTimer++;
+  if (state.isNight && state.mobSpawnTimer > 240 && state.mobs.length < 4) {
+    state.mobSpawnTimer = 0;
+    spawnMob();
+  }
 
   // Update mobs
   state.mobs = state.mobs.filter(m => updateMob(m));
+
+  updateTNTs();
 
   // Update particles
   state.particles = state.particles.filter(pt => {
@@ -1662,6 +1830,19 @@ function render() {
   // Draw mobs
   state.mobs.forEach(m => drawMob(ctx, m));
 
+  if (state.tnts && state.tnts.length) {
+    state.tnts.forEach(t => {
+      const blink = Math.floor(t.fuse / 8) % 2 === 0;
+      ctx.fillStyle = blink ? '#fff' : '#D32F2F';
+      ctx.fillRect(t.x, t.y, t.width, t.height);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(t.x, t.y, t.width, t.height);
+      ctx.fillStyle = '#FFC107';
+      ctx.fillRect(t.x + t.width / 2 - 2, t.y - 4, 4, 4);
+    });
+  }
+
   // Draw particles
   state.particles.forEach(pt => {
     ctx.fillStyle = pt.color;
@@ -1922,6 +2103,19 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') state.keys.right = true;
   if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp' || e.key === ' ') { state.keys.jump = true; e.preventDefault(); }
   if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') state.keys.down = true;
+  if (e.key === 'f' || e.key === 'F') {
+    const p = state.player;
+    if (p) {
+      p.flying = !p.flying;
+      showHint(p.flying ? 'FLYING - W/S or Space/Down to fly up/down' : 'LANDED');
+      if (!p.flying) p.vy = 0;
+    }
+    e.preventDefault();
+  }
+  if (e.key === 'q' || e.key === 'Q') { throwTNT(); e.preventDefault(); }
+  if (e.key === 'r' || e.key === 'R') {
+    if (state.dead) { respawnPlayer(); e.preventDefault(); }
+  }
   if (e.key === 'c' || e.key === 'C') {
     if (state.craftOpen) closeCraftMenu(); else openCraftMenu();
   }
