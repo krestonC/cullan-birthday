@@ -1057,12 +1057,150 @@ class Mob {
   }
 }
 
+// ==================== SOUND (Web Audio synth) ====================
+let audioCtx = null;
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    audioUnlocked = true;
+  } catch (e) { /* audio not supported */ }
+}
+document.addEventListener('click', unlockAudio, { passive: true });
+document.addEventListener('touchstart', unlockAudio, { passive: true });
+document.addEventListener('keydown', unlockAudio, { passive: true });
+
+function playSound(type) {
+  if (!audioUnlocked || !audioCtx) return;
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  try {
+    if (type === 'mine') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.07);
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'break') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.12);
+      g.gain.setValueAtTime(0.15, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.14);
+    } else if (type === 'place') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(280, now + 0.05);
+      g.gain.setValueAtTime(0.1, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'jump') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'tnt') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.18);
+      g.gain.setValueAtTime(0.1, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.22);
+    } else if (type === 'boom') {
+      // Explosion = low-passed white noise + sine bass
+      const bs = 0.5 * ctx.sampleRate;
+      const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.setValueAtTime(900, now);
+      filt.frequency.exponentialRampToValueAtTime(120, now + 0.4);
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.3, now);
+      ng.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      src.connect(filt); filt.connect(ng); ng.connect(ctx.destination);
+      src.start(now); src.stop(now + 0.5);
+      const sub = ctx.createOscillator(); const sg = ctx.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(70, now);
+      sub.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+      sg.gain.setValueAtTime(0.28, now);
+      sg.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      sub.connect(sg); sg.connect(ctx.destination);
+      sub.start(now); sub.stop(now + 0.35);
+    } else if (type === 'ssj') {
+      // DBZ power-up: rising saw chord
+      const freqs = [130.81, 164.81, 196.00, 261.63];
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator(); const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(f, now + i * 0.05);
+        osc.frequency.exponentialRampToValueAtTime(f * 4, now + 0.9);
+        g.gain.setValueAtTime(0, now + i * 0.05);
+        g.gain.linearRampToValueAtTime(0.07, now + i * 0.05 + 0.05);
+        g.gain.linearRampToValueAtTime(0.07, now + 0.9);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(now + i * 0.05); osc.stop(now + 1.4);
+      });
+    } else if (type === 'zombie') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(90, now);
+      osc.frequency.exponentialRampToValueAtTime(55, now + 0.35);
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'damage') {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(170, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+      g.gain.setValueAtTime(0.15, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.18);
+    } else if (type === 'win') {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((f, i) => {
+        const osc = ctx.createOscillator(); const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0.14, now + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(now + i * 0.12); osc.stop(now + i * 0.12 + 0.35);
+      });
+    }
+  } catch (e) { /* swallow audio errors */ }
+}
+
 // ==================== SUPER SAIYAN ====================
 function activateSuperSaiyan() {
   const p = state.player;
   if (!p || p.superSaiyan || state.dead) return;
   p.superSaiyan = true;
   p.invuln = 60;
+  playSound('ssj');
   const flash = document.getElementById('ssj-flash');
   const banner = document.getElementById('ssj-banner');
   if (flash) { flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active'); }
@@ -1134,10 +1272,12 @@ function throwTNT() {
   );
   state.tnts = state.tnts || [];
   state.tnts.push(tnt);
+  playSound('tnt');
   showHintOnce('tnt_thrown', 'TNT thrown! Stand back!');
 }
 
 function explodeTNT(tnt) {
+  playSound('boom');
   const cx = tnt.x + tnt.width / 2;
   const cy = tnt.y + tnt.height / 2;
   const ctx_ = Math.floor(cx / BLOCK);
@@ -1166,16 +1306,15 @@ function explodeTNT(tnt) {
     }
     return true;
   });
+  // Party mode: TNT never hurts the player (they will spam it). Still knocks back for fun.
   const p = state.player;
   if (p) {
     const px = p.x + p.width / 2, py = p.y + p.height / 2;
     const d = Math.hypot(px - cx, py - cy);
-    if (d < RADIUS * BLOCK && p.invuln <= 0) {
-      p.hp -= 2;
-      p.invuln = 30;
-      p.vx = Math.sign(px - cx) * 8;
-      p.vy = -7;
-      updateHearts();
+    if (d < RADIUS * BLOCK) {
+      p.vx = Math.sign(px - cx) * 7;
+      p.vy = -6;
+      p.invuln = 20;
     }
   }
   for (let i = 0; i < 40; i++) {
@@ -1364,6 +1503,7 @@ function doCraft(recipe) {
   }
   if (recipe.isWin && !state.won) {
     state.won = true;
+    playSound('win');
     document.getElementById('win-screen').classList.add('show');
   }
   updateHotbar();
@@ -1386,7 +1526,8 @@ function canMine(blockType) {
 function miningTime(blockType) {
   const b = BLOCK_BY_ID[blockType];
   const toolBonus = { null: 1, wood: 0.7, stone: 0.5, iron: 0.3, diamond: 0.18 };
-  const speed = toolBonus[state.tools.pickaxe] ?? 1;
+  let speed = toolBonus[state.tools.pickaxe] ?? 1;
+  if (state.player && state.player.superSaiyan) speed *= 0.5;
   return Math.max(10, Math.floor(b.hardness * 40 * speed));
 }
 
@@ -1446,20 +1587,20 @@ function saveGame() {
       time: state.time,
       player: { x: state.player.x, y: state.player.y, hp: state.player.hp, name: state.player.name },
     };
-    localStorage.setItem('blockquest_save', JSON.stringify(data));
+    localStorage.setItem('blockquest_save_v3', JSON.stringify(data));
   } catch (e) { /* quota exceeded, ignore */ }
 }
 
 function loadGame() {
   try {
-    const raw = localStorage.getItem('blockquest_save');
+    const raw = localStorage.getItem('blockquest_save_v3');
     if (!raw) return null;
     return JSON.parse(raw);
   } catch (e) { return null; }
 }
 
 function hasSave() {
-  return !!localStorage.getItem('blockquest_save');
+  return !!localStorage.getItem('blockquest_save_v3');
 }
 
 // ==================== PHYSICS & COLLISION ====================
@@ -1540,8 +1681,9 @@ function update() {
     p.vx = moveX * 1.15;
   } else {
     if (state.keys.jump && p.onGround) {
-      p.vy = JUMP_VELOCITY;
+      p.vy = p.superSaiyan ? JUMP_VELOCITY * 1.4 : JUMP_VELOCITY;
       p.onGround = false;
+      playSound('jump');
     }
     p.vy += GRAVITY;
     if (p.vy > MAX_FALL) p.vy = MAX_FALL;
@@ -1551,31 +1693,34 @@ function update() {
   moveEntity(p, 0, p.vy);
 
   const pTy = Math.floor((p.y + p.height / 2) / BLOCK);
-  if (pTy >= 54) {
+  if (pTy >= 54 && !p.superSaiyan) {
     p.lavaTick++;
     if (p.lavaTick >= 25 && p.invuln <= 0) {
       p.lavaTick = 0; p.hp -= 1; p.invuln = 15;
       spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#FF5722', 8);
       showHintOnce('lava_zone', 'TOO DEEP! LAVA IS BURNING YOU!');
+      playSound('damage');
       updateHearts();
     }
   } else { p.lavaTick = 0; }
-  if (pTy <= 3) {
+  if (pTy <= 3 && !p.superSaiyan) {
     p.freezeTick++;
     if (p.freezeTick >= 40 && p.invuln <= 0) {
       p.freezeTick = 0; p.hp -= 1; p.invuln = 15;
       spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#B3E5FC', 8);
       showHintOnce('freeze_zone', 'TOO HIGH! YOU ARE FREEZING!');
+      playSound('damage');
       updateHearts();
     }
   } else { p.freezeTick = 0; }
   const px_ = Math.floor((p.x + p.width / 2) / BLOCK);
   const py_ = Math.floor((p.y + p.height / 2) / BLOCK);
   if (px_ >= 0 && px_ < WORLD_WIDTH && py_ >= 0 && py_ < WORLD_HEIGHT) {
-    if (state.world[px_][py_] === BLOCKS.LAVA.id && p.invuln <= 0) {
+    if (state.world[px_][py_] === BLOCKS.LAVA.id && p.invuln <= 0 && !p.superSaiyan) {
       p.hp -= 4; p.invuln = 30;
       spawnParticles(p.x + p.width / 2, p.y + p.height / 2, '#FF5722', 20);
       showHint('LAVA!');
+      playSound('damage');
       updateHearts();
     }
   }
@@ -1709,6 +1854,7 @@ function updateMining() {
   const blockType = state.world[tx][ty];
   if (blockType === 0) { state.breaking = null; return; }
 
+  if (state.breaking.progress === 0) playSound('mine');
   state.breaking.progress++;
   if (state.breaking.progress >= state.breaking.total) {
     const b = BLOCK_BY_ID[blockType];
@@ -1716,6 +1862,7 @@ function updateMining() {
     state.world[tx][ty] = 0;
     state.items.push(new ItemDrop(tx * BLOCK + BLOCK / 2 - 7, ty * BLOCK + 4, dropType));
     spawnParticles(tx * BLOCK + BLOCK / 2, ty * BLOCK + BLOCK / 2, b.color, 10);
+    playSound('break');
     state.breaking = null;
   }
 }
@@ -1769,6 +1916,7 @@ function tryPlace() {
   state.world[tx][ty] = blockType;
   // Party mode: placing does NOT consume inventory (unlimited blocks).
   // removeInv(blockType, 1);
+  playSound('place');
   updateHotbar();
 }
 
@@ -1781,6 +1929,7 @@ function spawnMob() {
   const ty = state.heights[tx] - 2;
   const type = Math.random() < 0.5 ? 'zombie' : 'creeper';
   state.mobs.push(new Mob(tx * BLOCK, ty * BLOCK, type));
+  playSound('zombie');
 }
 
 function updateMob(m) {
@@ -1822,6 +1971,7 @@ function updateMob(m) {
   const distX = Math.abs(px - mx), distY = Math.abs(py - my);
   if (distX < BLOCK && distY < BLOCK && m.attackCooldown <= 0 && p.invuln <= 0) {
     p.hp -= (m.type === 'creeper' ? 3 : 2);
+    playSound('damage');
     p.invuln = 40;
     p.vx = Math.sign(px - mx) * 6;
     p.vy = -5;
@@ -2476,7 +2626,7 @@ document.getElementById('resumeBtn').addEventListener('click', () => {
 });
 document.getElementById('resetBtn').addEventListener('click', () => {
   if (confirm('Start a brand new world? Your current progress will be lost.')) {
-    localStorage.removeItem('blockquest_save');
+    localStorage.removeItem('blockquest_save_v3');
     document.getElementById('pause-menu').classList.remove('show');
     initGame(true);
   }
@@ -2516,7 +2666,7 @@ document.getElementById('closeCraftBtn').addEventListener('click', closeCraftMen
 document.getElementById('newGameBtn').addEventListener('click', () => {
   const name = document.getElementById('playerName').value.trim() || 'Cullan';
   localStorage.setItem('bq_name', name);
-  localStorage.removeItem('blockquest_save');
+  localStorage.removeItem('blockquest_save_v3');
   document.getElementById('start-screen').classList.add('hidden');
   initGame(true);
   startGameLoop();
