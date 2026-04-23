@@ -2783,6 +2783,59 @@ document.addEventListener('touchmove', (e) => {
   if (gameStarted) e.preventDefault();
 }, { passive: false });
 
+
+
+// ==================== PWA INSTALL PROMPT ====================
+(() => {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg failed:', err));
+    });
+  }
+
+  const installBtn = document.getElementById('installBtn');
+  const iosHint = document.getElementById('iosInstallHint');
+  const iosHintClose = document.getElementById('iosHintClose');
+  let deferredPrompt = null;
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isInStandalone && installBtn) installBtn.classList.add('show');
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.classList.remove('show');
+      if (outcome === 'accepted' && typeof showHint === 'function') showHint('App installed! Find it on your home screen.');
+    });
+  }
+
+  if (isIOS && !isInStandalone && iosHint) {
+    if (localStorage.getItem('bq_ios_hint_dismissed') !== '1') {
+      setTimeout(() => iosHint.classList.add('show'), 3000);
+    }
+  }
+  if (iosHintClose && iosHint) {
+    iosHintClose.addEventListener('click', () => {
+      iosHint.classList.remove('show');
+      localStorage.setItem('bq_ios_hint_dismissed', '1');
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.classList.remove('show');
+    if (iosHint) iosHint.classList.remove('show');
+  });
+})();
+
 </script>
 
 </body>
