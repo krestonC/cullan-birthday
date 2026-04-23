@@ -773,6 +773,37 @@ function drawBlock(ctx, type, x, y, size = BLOCK) {
     ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.fillRect(x + 4, y + 4, 6, 2);
+  } else if (type === BLOCKS.LAVA.id) {
+    const t = (state.time || 0) * 0.08;
+    ctx.fillStyle = '#FF5722';
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = '#FFC107';
+    const off = (Math.sin(t + x * 0.1) + 1) * 4;
+    ctx.fillRect(x + 2, y + 4 + off, size - 4, 3);
+    ctx.fillRect(x + 4, y + 18 - off, size - 8, 3);
+    ctx.fillStyle = '#FFEB3B';
+    ctx.fillRect(x + 6, y + 10, 4, 2);
+  } else if (type === BLOCKS.TNT.id) {
+    ctx.fillStyle = '#D32F2F';
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('TNT', x + size / 2, y + size / 2 + 4);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
+    ctx.fillStyle = '#FFC107';
+    ctx.fillRect(x + size / 2 - 2, y - 3, 4, 3);
+  } else if (type === BLOCKS.ICE.id) {
+    ctx.fillStyle = '#B3E5FC';
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = '#E1F5FE';
+    ctx.fillRect(x + 2, y + 2, size - 4, 3);
+    ctx.fillRect(x + 6, y + 10, 6, 3);
+    ctx.strokeStyle = '#81D4FA';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
   }
 
   // Dark outline
